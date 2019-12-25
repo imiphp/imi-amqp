@@ -24,7 +24,7 @@ class RabbitMQTest extends BaseTest
             'r1'    =>  '{"memberId":20180621}',
             'r2'    =>  '{"memberId":20180621,"content":"memberId:20180621"}',
         ];
-        for($i = 0; $i < 3; ++$i)
+        for($i = 0; $i < 10; ++$i)
         {
             $response = $http->get($this->host . 'consume?memberId=20180621');
             $data = $response->json(true);
