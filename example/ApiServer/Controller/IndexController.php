@@ -1,6 +1,7 @@
 <?php
 namespace ImiApp\ApiServer\Controller;
 
+use Imi\Redis\Redis;
 use Imi\Aop\Annotation\Inject;
 use ImiApp\AMQP\Test\TestMessage;
 use Imi\Controller\HttpController;
@@ -27,6 +28,17 @@ class IndexController extends HttpController
      * @var \ImiApp\AMQP\Test2\TestPublisher2
      */
     protected $testPublisher2;
+
+    /**
+     * @Action
+     * @Route("/")
+     *
+     * @return void
+     */
+    public function index()
+    {
+        return $this->response->write('');
+    }
 
     /**
      * @Action
@@ -59,7 +71,12 @@ class IndexController extends HttpController
      */
     public function consume($memberId)
     {
-
+        $r1 = Redis::get('imi-amqp:consume:1:' . $memberId);
+        $r2 = Redis::get('imi-amqp:consume:2:' . $memberId);
+        return [
+            'r1'    =>  $r1,
+            'r2'    =>  $r2,
+        ];
     }
 
 }

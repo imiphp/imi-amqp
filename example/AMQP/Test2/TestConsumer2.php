@@ -22,15 +22,13 @@ class TestConsumer2 extends BaseConsumer
     /**
      * 消费任务
      *
-     * @param \Imi\AMQP\Contract\IMessage $message
+     * @param \ImiApp\AMQP\Test2\TestMessage2 $message
      * @return void
      */
     protected function consume(IMessage $message)
     {
         var_dump(__CLASS__, $message->getBody(), get_class($message));
-        // $messageInstance = TestMessage2::fromBody($message);
-        // $data = $messageInstance->getBodyData();
-        // Redis::set('imi-amqp:consume:' . $message->getBody())
+        Redis::set('imi-amqp:consume:2:' . $message->getMemberId(), $message->getBody());
         return ConsumerResult::ACK;
     }
 

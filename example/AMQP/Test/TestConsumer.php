@@ -1,6 +1,7 @@
 <?php
 namespace ImiApp\AMQP\Test;
 
+use Imi\Redis\Redis;
 use Imi\Bean\Annotation\Bean;
 use Imi\AMQP\Annotation\Queue;
 use Imi\AMQP\Base\BaseConsumer;
@@ -22,12 +23,13 @@ class TestConsumer extends BaseConsumer
     /**
      * 消费任务
      *
-     * @param \Imi\AMQP\Contract\IMessage $message
+     * @param \ImiApp\AMQP\Test\TestMessage $message
      * @return void
      */
     protected function consume(IMessage $message)
     {
         var_dump(__CLASS__, $message->getBody(), get_class($message));
+        Redis::set('imi-amqp:consume:1:' . $message->getMemberId(), $message->getBody());
         return ConsumerResult::ACK;
     }
 

@@ -9,6 +9,7 @@
     },
     "require-dev": {
         "yurunsoft/imi": "dev-dev",
+        "yurunsoft/yurun-http": "^3.4.0",
         "phpunit/phpunit": "^7"
     },
     "autoload": {
@@ -23,7 +24,6 @@
         }
     },
     "scripts": {
-      "test": "php ./tests/phpunit -c ./tests/phpunit.xml",
-      "install-test": "php --ri swoole && composer install && cd ./tests && composer install && cd ../ && composer test"
+      "test": "./tests/run"
     }
 }
