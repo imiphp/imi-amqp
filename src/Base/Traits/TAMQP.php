@@ -1,17 +1,18 @@
 <?php
 namespace Imi\AMQP\Base\Traits;
 
+use Imi\Log\Log;
+use Imi\Bean\BeanFactory;
 use Imi\Pool\PoolManager;
 use Imi\AMQP\Annotation\Queue;
 use Imi\Aop\Annotation\Inject;
 use Imi\AMQP\Annotation\Consumer;
 use Imi\AMQP\Annotation\Exchange;
+use Imi\AMQP\Annotation\Publisher;
 use Imi\AMQP\Annotation\Connection;
 use Imi\Bean\Annotation\AnnotationManager;
 use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
-use Imi\Bean\BeanFactory;
-use Imi\Log\Log;
 
 trait TAMQP
 {
@@ -51,6 +52,13 @@ trait TAMQP
     protected $exchanges;
 
     /**
+     * 发布者列表
+     *
+     * @var \Imi\AMQP\Annotation\Publisher[]
+     */
+    protected $publishers;
+
+    /**
      * 消费者列表
      *
      * @var \Imi\AMQP\Annotation\Consumer[]
@@ -67,6 +75,7 @@ trait TAMQP
         $class = BeanFactory::getObjectClass($this);
         $this->queues = AnnotationManager::getClassAnnotations($class, Queue::class);
         $this->exchanges = AnnotationManager::getClassAnnotations($class, Exchange::class);
+        $this->publishers = AnnotationManager::getClassAnnotations($class, Publisher::class);
         $this->consumers = AnnotationManager::getClassAnnotations($class, Consumer::class);
     }
 
@@ -139,6 +148,37 @@ trait TAMQP
             Log::debug(sprintf('queueDeclare: %s', $queue->name, $exchange->type));
             $this->channel->queue_declare($queue->name, $queue->passive, $queue->durable, $queue->exclusive, $queue->autoDelete, $queue->nowait, $queue->arguments, $queue->ticket);
         }
+    }
+
+    /**
+     * 定义发布者
+     *
+     * @return void
+     */
+    protected function declarePublisher()
+    {
+        $this->declare();
+        foreach($this->publishers as $publisher)
+        {
+            foreach((array)$publisher->queue as $queueName)
+            {
+                foreach((array)$publisher->exchange as $exchangeName)
+                {
+                    Log::debug(sprintf('queueBind: %s, %s, %s', $queueName, $exchangeName, $publisher->routingKey));
+                    $this->channel->queue_bind($queueName, $exchangeName, $publisher->routingKey);
+                }
+            }
+        }
+    }
+
+    /**
+     * 定义消费者
+     *
+     * @return void
+     */
+    protected function declareConsumer()
+    {
+        $this->declare();
         foreach($this->consumers as $consumer)
         {
             foreach((array)$consumer->queue as $queueName)

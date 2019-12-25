@@ -131,7 +131,7 @@ class Connection extends Base
     public $channelRpcTimeout = 0.0;
 
     /**
-     * ssh 协议
+     * ssl 协议
      *
      * @var string|null
      */

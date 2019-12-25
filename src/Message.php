@@ -18,13 +18,6 @@ class Message implements IMessage
     protected $bodyData;
 
     /**
-     * 主体内容
-     *
-     * @var string
-     */
-    protected $body;
-
-    /**
      * 配置属性
      *
      * @var array

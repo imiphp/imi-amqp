@@ -47,7 +47,7 @@ abstract class BasePublisher implements IPublisher
         {
             $this->channel = $this->connection->channel();
             $this->channel->confirm_select();
-            $this->declare();
+            $this->declarePublisher();
         }
         $this->ackSuccess = false;
         $this->channel->set_ack_handler(function() {

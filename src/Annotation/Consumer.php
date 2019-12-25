@@ -19,7 +19,7 @@ class Consumer extends Base
     protected $defaultFieldName = 'tag';
 
     /**
-     * Consumer Tag
+     * 消费者标签
      *
      * @var string
      */

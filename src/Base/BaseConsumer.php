@@ -30,7 +30,7 @@ abstract class BaseConsumer implements IConsumer
         try {
             $this->connection = $this->getConnection();
             $this->channel = $this->connection->channel();
-            $this->declare();
+            $this->declareConsumer();
             $this->bindConsumer();
             while($this->channel && $this->channel->is_consuming())
             {
