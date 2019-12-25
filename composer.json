@@ -1,0 +1,29 @@
+    
+{
+    "name": "imiphp/imi-amqp",
+    "type": "library",
+    "license": "MIT",
+    "description": "支持在 imi 框架中使用 支持 QMQP 协议的消息队列，如：RabbitMQ",
+    "require": {
+        "php-amqplib/php-amqplib": "^2.11.0"
+    },
+    "require-dev": {
+        "yurunsoft/imi": "dev-dev",
+        "phpunit/phpunit": "^7"
+    },
+    "autoload": {
+        "psr-4" : {
+            "Imi\\AMQP\\" : "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4" : {
+            "ImiApp\\" : "example/",
+            "Imi\\AMQP\\Test\\": "tests/unit/"
+        }
+    },
+    "scripts": {
+      "test": "php ./tests/phpunit -c ./tests/phpunit.xml",
+      "install-test": "php --ri swoole && composer install && cd ./tests && composer install && cd ../ && composer test"
+    }
+}
