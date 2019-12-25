@@ -27,10 +27,14 @@ class TestProcess extends BaseProcess
     public function run(\Swoole\Process $process)
     {
         go(function(){
-            $this->testConsumer->run();
+            do {
+                $this->testConsumer->run();
+            } while(true);
         });
         go(function(){
-            $this->testConsumer2->run();
+            do {
+                $this->testConsumer2->run();
+            } while(true);
         });
     }
 

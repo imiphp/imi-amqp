@@ -300,21 +300,21 @@ class TestConsumer extends BaseConsumer
 
 | 属性名称 | 说明 |
 |-|-
-| $poolName | 不为 `null` 时，无视其他属性，直接用该连接池配置。默认为`null`，如果`host`、`port`、`user`、`password`都未设置，则获取默认的连接池。 |
+| poolName | 不为 `null` 时，无视其他属性，直接用该连接池配置。默认为`null`，如果`host`、`port`、`user`、`password`都未设置，则获取默认的连接池。 |
 | host | 主机 |
 | port | 端口 |
 | user | 用户名 |
-| $vhost | vhost，默认`/` |
+| vhost | vhost，默认`/` |
 | insist | insist |
 | loginMethod | 默认`AMQPLAIN` |
 | loginResponse | loginResponse |
 | locale | 默认`en_US` |
-| $connectionTimeout | 连接超时 |
-| $readWriteTimeout | 读写超时 |
+| connectionTimeout | 连接超时 |
+| readWriteTimeout | 读写超时 |
 | keepalive | keepalive，默认`false` |
-| $heartbeat | 心跳时间，默认`0` |
-| $channelRpcTimeout | 频道 RPC 超时时间，默认`0.0` |
-| $sslProtocol | ssl 协议，默认`null` |
+| heartbeat | 心跳时间，默认`0` |
+| channelRpcTimeout | 频道 RPC 超时时间，默认`0.0` |
+| sslProtocol | ssl 协议，默认`null` |
 
 ## 免费技术支持
 
