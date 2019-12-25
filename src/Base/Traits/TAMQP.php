@@ -4,6 +4,7 @@ namespace Imi\AMQP\Base\Traits;
 use Imi\Log\Log;
 use Imi\Bean\BeanFactory;
 use Imi\Pool\PoolManager;
+use Imi\AMQP\Pool\AMQPPool;
 use Imi\AMQP\Annotation\Queue;
 use Imi\Aop\Annotation\Inject;
 use Imi\AMQP\Annotation\Consumer;
@@ -108,7 +109,7 @@ trait TAMQP
         }
         if($connectionByPool)
         {
-            return PoolManager::getResource($connectionConfig->poolName ?? $this->amqp->getDefaultPoolName())->getInstance();
+            return AMQPPool::getInstance($connectionConfig->poolName ?? $this->amqp->getDefaultPoolName());
         }
         else
         {
