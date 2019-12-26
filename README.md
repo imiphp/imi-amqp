@@ -29,6 +29,17 @@
 
 可以参考 `example` 目录示例，包括完整的消息发布和消费功能。
 
+在项目 `config/config.php` 中配置：
+
+```php
+[
+    'components'    =>  [
+        // 引入组件
+        'AMQP'   =>  'Imi\AMQP',
+    ],
+]
+```
+
 ### 消息定义
 
 继承 `Imi\AMQP\Message` 类，可在构造方法中对属性修改。
