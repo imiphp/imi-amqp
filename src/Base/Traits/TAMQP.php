@@ -163,6 +163,10 @@ trait TAMQP
         {
             foreach((array)$publisher->queue as $queueName)
             {
+                if(null === $queueName || '' === $queueName)
+                {
+                    continue;
+                }
                 foreach((array)$publisher->exchange as $exchangeName)
                 {
                     Log::debug(sprintf('queueBind: %s, %s, %s', $queueName, $exchangeName, $publisher->routingKey));
