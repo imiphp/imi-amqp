@@ -5,6 +5,7 @@ use Imi\AMQP\Contract\IConsumer;
 use Imi\AMQP\Base\Traits\TAMQP;
 use Imi\AMQP\Contract\IMessage;
 use Imi\AMQP\Enum\ConsumerResult;
+use Imi\App;
 use Imi\Log\Log;
 
 /**
@@ -76,27 +77,31 @@ abstract class BaseConsumer implements IConsumer
             {
                 $messageClass = $consumer->message ?? \Imi\AMQP\Message::class;
                 $this->channel->basic_consume($queueName, $consumer->tag, false, false, false, false, function(\PhpAmqpLib\Message\AMQPMessage $message) use($messageClass){
-                    /** @var \Imi\AMQP\Message $messageInstance */
-                    $messageInstance = new $messageClass;
-                    $messageInstance->setAMQPMessage($message);
-                    $result = $this->consume($messageInstance);
-                    switch($result)
-                    {
-                        case ConsumerResult::ACK:
-                            $this->channel->basic_ack($message->getDeliveryTag());
-                            break;
-                        case ConsumerResult::NACK:
-                            $this->channel->basic_nack($message->getDeliveryTag());
-                            break;
-                        case ConsumerResult::NACK_REQUEUE:
-                            $this->channel->basic_nack($message->getDeliveryTag(), false, true);
-                            break;
-                        case ConsumerResult::REJECT:
-                            $this->channel->basic_reject($message->getDeliveryTag(), false);
-                            break;
-                        case ConsumerResult::REJECT_REQUEUE:
-                            $this->channel->basic_reject($message->getDeliveryTag(), true);
-                            break;
+                    try {
+                        /** @var \Imi\AMQP\Message $messageInstance */
+                        $messageInstance = new $messageClass;
+                        $messageInstance->setAMQPMessage($message);
+                        $result = $this->consume($messageInstance);
+                        switch($result)
+                        {
+                            case ConsumerResult::ACK:
+                                $this->channel->basic_ack($message->getDeliveryTag());
+                                break;
+                            case ConsumerResult::NACK:
+                                $this->channel->basic_nack($message->getDeliveryTag());
+                                break;
+                            case ConsumerResult::NACK_REQUEUE:
+                                $this->channel->basic_nack($message->getDeliveryTag(), false, true);
+                                break;
+                            case ConsumerResult::REJECT:
+                                $this->channel->basic_reject($message->getDeliveryTag(), false);
+                                break;
+                            case ConsumerResult::REJECT_REQUEUE:
+                                $this->channel->basic_reject($message->getDeliveryTag(), true);
+                                break;
+                        }
+                    } catch(\Throwable $th) {
+                        App::getBean('ErrorLog')->onException($th);
                     }
                 });
             }
