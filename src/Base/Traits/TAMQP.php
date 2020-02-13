@@ -163,7 +163,7 @@ trait TAMQP
         {
             foreach((array)$publisher->queue as $queueName)
             {
-                if(null === $queueName || '' === $queueName)
+                if('' === $queueName)
                 {
                     continue;
                 }
