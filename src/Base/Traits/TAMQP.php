@@ -7,6 +7,7 @@ use Imi\Pool\PoolManager;
 use Imi\AMQP\Pool\AMQPPool;
 use Imi\AMQP\Annotation\Queue;
 use Imi\Aop\Annotation\Inject;
+use PhpAmqpLib\Wire\AMQPTable;
 use Imi\AMQP\Annotation\Consumer;
 use Imi\AMQP\Annotation\Exchange;
 use Imi\AMQP\Annotation\Publisher;
@@ -142,12 +143,12 @@ trait TAMQP
         foreach($this->exchanges as $exchange)
         {
             Log::debug(sprintf('exchangeDeclare: %s, %s', $exchange->name, $exchange->type));
-            $this->channel->exchange_declare($exchange->name, $exchange->type, $exchange->passive, $exchange->durable, $exchange->autoDelete, $exchange->internal, $exchange->nowait, $exchange->arguments, $exchange->ticket);
+            $this->channel->exchange_declare($exchange->name, $exchange->type, $exchange->passive, $exchange->durable, $exchange->autoDelete, $exchange->internal, $exchange->nowait, new AMQPTable($exchange->arguments), $exchange->ticket);
         }
         foreach($this->queues as $queue)
         {
             Log::debug(sprintf('queueDeclare: %s', $queue->name, $exchange->type));
-            $this->channel->queue_declare($queue->name, $queue->passive, $queue->durable, $queue->exclusive, $queue->autoDelete, $queue->nowait, $queue->arguments, $queue->ticket);
+            $this->channel->queue_declare($queue->name, $queue->passive, $queue->durable, $queue->exclusive, $queue->autoDelete, $queue->nowait, new AMQPTable($queue->arguments), $queue->ticket);
         }
     }
 
