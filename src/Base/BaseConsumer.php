@@ -7,6 +7,7 @@ use Imi\AMQP\Contract\IMessage;
 use Imi\AMQP\Enum\ConsumerResult;
 use Imi\App;
 use Imi\Log\Log;
+use function Yurun\Swoole\Coroutine\goWait;
 
 /**
  * 消费者基类
@@ -81,7 +82,9 @@ abstract class BaseConsumer implements IConsumer
                         /** @var \Imi\AMQP\Message $messageInstance */
                         $messageInstance = new $messageClass;
                         $messageInstance->setAMQPMessage($message);
-                        $result = $this->consume($messageInstance);
+                        $result = goWait(function() use($messageInstance){
+                            return $this->consume($messageInstance);
+                        });
                         switch($result)
                         {
                             case ConsumerResult::ACK:
