@@ -9,7 +9,7 @@
     },
     "require-dev": {
         "yurunsoft/imi": "dev-dev",
-        "yurunsoft/yurun-http": "^3.4.0",
+        "yurunsoft/yurun-http": "^4.0.0",
         "phpunit/phpunit": "^7"
     },
     "autoload": {
