@@ -68,6 +68,13 @@ trait TAMQP
     protected $consumers;
 
     /**
+     * 连接池名称
+     *
+     * @var string
+     */
+    protected $poolName;
+
+    /**
      * 初始化配置
      *
      * @return void
@@ -88,29 +95,41 @@ trait TAMQP
      */
     protected function getConnection(): AbstractConnection
     {
-        $class = BeanFactory::getObjectClass($this);
-        $connectionConfig = AnnotationManager::getClassAnnotations($class, Connection::class)[0] ?? null;
-        if($connectionConfig)
+        if(null === $this->poolName)
         {
-            if(null === $connectionConfig->poolName)
+            $class = BeanFactory::getObjectClass($this);
+            $connectionConfig = AnnotationManager::getClassAnnotations($class, Connection::class)[0] ?? null;
+            if($connectionConfig)
             {
-                if(null !== $connectionConfig->host && null !== $connectionConfig->port && null !== $connectionConfig->user && null !== $connectionConfig->password)
+                if(null === $connectionConfig->poolName)
                 {
-                    $connectionByPool = false;
+                    if(null !== $connectionConfig->host && null !== $connectionConfig->port && null !== $connectionConfig->user && null !== $connectionConfig->password)
+                    {
+                        $connectionByPool = false;
+                    }
+                    else
+                    {
+                        $connectionByPool = true;
+                    }
                 }
-                else
-                {
-                    $connectionByPool = true;
-                }
+            }
+            else
+            {
+                $connectionByPool = true;
+            }
+            if($connectionByPool)
+            {
+                $poolName = $connectionConfig->poolName ?? $this->amqp->getDefaultPoolName();
             }
         }
         else
         {
             $connectionByPool = true;
+            $poolName = $this->poolName;
         }
-        if($connectionByPool)
+        if($connectionByPool || $poolName)
         {
-            return AMQPPool::getInstance($connectionConfig->poolName ?? $this->amqp->getDefaultPoolName());
+            return AMQPPool::getInstance($poolName);
         }
         else
         {
@@ -170,7 +189,7 @@ trait TAMQP
                 }
                 foreach((array)$publisher->exchange as $exchangeName)
                 {
-                    Log::debug(sprintf('queueBind: %s, %s, %s', $queueName, $exchangeName, $publisher->routingKey));
+                    Log::debug(sprintf('queueBind: %s, exchangeName: %s, routingKey: %s', $queueName, $exchangeName, $publisher->routingKey));
                     $this->channel->queue_bind($queueName, $exchangeName, $publisher->routingKey);
                 }
             }
@@ -196,6 +215,34 @@ trait TAMQP
                 }
             }
         }
+    }
+
+    /**
+     * Get 连接
+     *
+     * @return \PhpAmqpLib\Connection\AbstractConnection
+     */ 
+    public function getAMQPConnection()
+    {
+        if(!$this->connection)
+        {
+            $this->connection = $this->getConnection();
+        }
+        return $this->connection;
+    }
+
+    /**
+     * Get 频道
+     *
+     * @return \PhpAmqpLib\Channel\AMQPChannel
+     */ 
+    public function getAMQPChannel()
+    {
+        if(!$this->channel || !$this->channel->is_open())
+        {
+            $this->channel = $this->getAMQPConnection()->channel();
+        }
+        return $this->channel;
     }
 
 }
