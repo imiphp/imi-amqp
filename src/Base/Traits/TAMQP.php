@@ -161,12 +161,12 @@ trait TAMQP
     {
         foreach($this->exchanges as $exchange)
         {
-            Log::debug(sprintf('exchangeDeclare: %s, %s', $exchange->name, $exchange->type));
+            Log::debug(sprintf('exchangeDeclare: %s, type: %s', $exchange->name, $exchange->type));
             $this->channel->exchange_declare($exchange->name, $exchange->type, $exchange->passive, $exchange->durable, $exchange->autoDelete, $exchange->internal, $exchange->nowait, new AMQPTable($exchange->arguments), $exchange->ticket);
         }
         foreach($this->queues as $queue)
         {
-            Log::debug(sprintf('queueDeclare: %s', $queue->name, $exchange->type));
+            Log::debug(sprintf('queueDeclare: type: %s', $queue->name, $exchange->type));
             $this->channel->queue_declare($queue->name, $queue->passive, $queue->durable, $queue->exclusive, $queue->autoDelete, $queue->nowait, new AMQPTable($queue->arguments), $queue->ticket);
         }
     }
@@ -210,7 +210,7 @@ trait TAMQP
             {
                 foreach((array)$consumer->exchange as $exchangeName)
                 {
-                    Log::debug(sprintf('queueBind: %s, %s, %s', $queueName, $exchangeName, $consumer->routingKey));
+                    Log::debug(sprintf('queueBind: %s, exchangeName: %s, routingKey: %s', $queueName, $exchangeName, $consumer->routingKey));
                     $this->channel->queue_bind($queueName, $exchangeName, $consumer->routingKey);
                 }
             }

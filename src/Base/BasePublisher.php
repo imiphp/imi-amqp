@@ -27,6 +27,21 @@ abstract class BasePublisher implements IPublisher
     }
 
     /**
+     * 关闭
+     *
+     * @return void
+     */
+    public function close()
+    {
+        if($this->channel)
+        {
+            $this->channel->close();
+            $this->channel = null;
+        }
+        $this->connection = null;
+    }
+
+    /**
      * 准备发布
      *
      * @param boolean $force

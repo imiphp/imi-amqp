@@ -13,6 +13,7 @@ use Imi\AMQP\Queue\JsonAMQPMessage;
 use Imi\AMQP\Queue\QueueAMQPMessage;
 use Imi\Util\Traits\TDataToProperty;
 use Imi\Queue\Exception\QueueException;
+use PhpAmqpLib\Exception\AMQPConnectionClosedException;
 
 /**
  * AMQP 队列驱动
@@ -199,6 +200,7 @@ class AMQPQueueDriver implements IQueueDriver
             [
                 'exchange'      =>  $exchangeName,
                 'routingKey'    =>  self::ROUTING_NORMAL,
+                'queue'         =>  $queueName,
             ],
         ];
         $consumers = [
@@ -244,16 +246,16 @@ class AMQPQueueDriver implements IQueueDriver
                     'queue'         =>  $timeoutQueueName,
                 ],
             ], $this->poolName);
-            $this->timeoutConsumer = BeanFactory::newInstance(QueueConsumer::class, 1, $exchanges, $queues, [
+            $this->timeoutConsumer = BeanFactory::newInstance(QueueConsumer::class, 1, $exchanges, [
                 [
-                    'exchange'  =>  $exchangeName,
-                    'queue'     =>  [
-                        [
-                            'name'          =>  $timeoutQueueName,
-                            'routingKey'    =>  self::ROUTING_TIMEOUT,
-                        ],
-                    ],
-                    'routingKey'=>  self::ROUTING_TIMEOUT,
+                    'name'          =>  $timeoutQueueName,
+                    'routingKey'    =>  self::ROUTING_TIMEOUT,
+                ],
+            ], [
+                [
+                    'exchange'      =>  $exchangeName,
+                    'routingKey'    =>  self::ROUTING_TIMEOUT,
+                    'queue'         =>  $timeoutQueueName,
                     'message'       =>  JsonAMQPMessage::class,
                 ],
             ], $this->poolName);
@@ -273,16 +275,16 @@ class AMQPQueueDriver implements IQueueDriver
                     'queue'         =>  $failQueueName,
                 ],
             ], $this->poolName);
-            $this->failConsumer = BeanFactory::newInstance(QueueConsumer::class, 1, $exchanges, $queues, [
+            $this->failConsumer = BeanFactory::newInstance(QueueConsumer::class, 1, $exchanges, [
                 [
-                    'exchange'  =>  $exchangeName,
-                    'queue'     =>  [
-                        [
-                            'name'          =>  $this->failQueueName = ('imi-' . $name . '-fail'),
-                            'routingKey'    =>  self::ROUTING_FAIL,
-                        ],
-                    ],
-                    'routingKey'=>  self::ROUTING_FAIL,
+                    'name'          =>  $failQueueName,
+                    'routingKey'    =>  self::ROUTING_FAIL,
+                ],
+            ], [
+                [
+                    'exchange'      =>  $exchangeName,
+                    'routingKey'    =>  self::ROUTING_FAIL,
+                    'queue'         =>  $failQueueName,
                     'message'       =>  JsonAMQPMessage::class,
                 ],
             ], $this->poolName);
@@ -291,15 +293,25 @@ class AMQPQueueDriver implements IQueueDriver
 
     public function __destruct()
     {
+        $this->publisher->close();
         $this->consumer->close();
+        if($this->failPublisher)
+        {
+            $this->failPublisher->close();
+        }
         if($this->failConsumer)
         {
             $this->failConsumer->close();
+        }
+        if($this->timeoutPublisher)
+        {
+            $this->timeoutPublisher->close();
         }
         if($this->timeoutConsumer)
         {
             $this->timeoutConsumer->close();
         }
+        $this->delayPublisher->close();
     }
 
     /**
@@ -454,7 +466,7 @@ class AMQPQueueDriver implements IQueueDriver
                         $this->timeoutConsumer->getAMQPChannel()->queue_purge($this->timeoutQueueName);
                         break;
                     case QueueType::DELAY:
-                        $this->delayPublisher->getAMQPChannel()->queue_purge($this->timeoutQueueName);
+                        $this->delayPublisher->getAMQPChannel()->queue_purge($this->delayQueueName);
                         break;
                 }
             } catch(\PhpAmqpLib\Exception\AMQPProtocolChannelException $e) {
@@ -490,7 +502,9 @@ class AMQPQueueDriver implements IQueueDriver
         }
         if($this->supportFail)
         {
-            $this->failPublisher->publish($message->getAmqpMessage());
+            $amqpMessage = $message->getAmqpMessage();
+            $amqpMessage->setRoutingKey(self::ROUTING_FAIL);
+            $this->failPublisher->publish($amqpMessage);
             $this->consumer->getAMQPChannel()->basic_ack($message->getAmqpMessage()->getAMQPMessage()->getDeliveryTag());
         }
         else
@@ -520,7 +534,7 @@ class AMQPQueueDriver implements IQueueDriver
         } catch(\PhpAmqpLib\Exception\AMQPProtocolChannelException $e) {
             $ready = $unacked = 0;
         }
-        $status['ready'] = $ready;
+        $status['ready'] = $ready + $unacked;
 
         // working
         $status['working'] = $redis->zCard($this->getRedisQueueKey(QueueType::WORKING));
@@ -542,7 +556,7 @@ class AMQPQueueDriver implements IQueueDriver
         }
         $status['fail'] = $fail;
         // timeout
-        if($this->supportFail)
+        if($this->supportTimeout)
         {
             try {
                 $result = $this->consumer->getAMQPChannel()->queue_declare($this->timeoutQueueName, true, false, false, false);
@@ -589,7 +603,11 @@ class AMQPQueueDriver implements IQueueDriver
         $count = 0;
         while($message = $this->failConsumer->pop(0.001))
         {
-            $this->publisher->publish($message);
+            $amqpMessage = new \Imi\AMQP\Message;
+            $amqpMessage->setBody($message->getBody());
+            $amqpMessage->setRoutingKey(self::ROUTING_NORMAL);
+            $this->publisher->publish($amqpMessage);
+            $this->failConsumer->getAMQPChannel()->basic_ack($message->getAMQPMessage()->getDeliveryTag());
             ++$count;
         }
         $this->failConsumer->reopen();
@@ -608,7 +626,11 @@ class AMQPQueueDriver implements IQueueDriver
         $count = 0;
         while($message = $this->timeoutConsumer->pop(0.001))
         {
-            $this->publisher->publish($message);
+            $amqpMessage = new \Imi\AMQP\Message;
+            $amqpMessage->setBody($message->getBody());
+            $amqpMessage->setRoutingKey(self::ROUTING_NORMAL);
+            $this->publisher->publish($amqpMessage);
+            $this->timeoutConsumer->getAMQPChannel()->basic_ack($message->getAMQPMessage()->getDeliveryTag());
             ++$count;
         }
         $this->timeoutConsumer->reopen();
@@ -675,7 +697,14 @@ LUA
                 throw new QueueException('Queue parseTimeoutMessages failed, ' . $error);
             }
         }
-        return $result;
+
+        foreach($result ?: [] as $message)
+        {
+            $amqpMessage = new \Imi\AMQP\Message;
+            $amqpMessage->setBody($message);
+            $amqpMessage->setRoutingKey(self::ROUTING_TIMEOUT);
+            $this->timeoutPublisher->publish($amqpMessage);
+        }
     }
 
     /**

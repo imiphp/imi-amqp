@@ -95,7 +95,7 @@ abstract class BaseQueueTest extends TestCase
         $driver = $this->getDriver();
 
         $message = new Message;
-        $message->setMessage('a');
+        $message->setMessage('testDelete');
         $messageId = $driver->push($message);
         $this->assertNotEmpty($messageId);
 
@@ -116,11 +116,11 @@ abstract class BaseQueueTest extends TestCase
         $this->assertEquals(0, $status->getFail());
 
         $message = new Message;
-        $message->setMessage('a');
+        $message->setMessage('testClearAndStatus-a');
         $messageId = $driver->push($message);
         $this->assertNotEmpty($messageId);
 
-        $message->setMessage('b');
+        $message->setMessage('testClearAndStatus-b');
         $messageId = $driver->push($message, 3600);
         $this->assertNotEmpty($messageId);
 
@@ -136,7 +136,7 @@ abstract class BaseQueueTest extends TestCase
         $driver->clear();
 
         $message = new Message;
-        $message->setMessage('a');
+        $message->setMessage('testRestoreFailMessages');
         $messageId = $driver->push($message);
         $this->assertNotEmpty($messageId);
 
@@ -157,26 +157,26 @@ abstract class BaseQueueTest extends TestCase
         $this->assertEquals(0, $driver->restoreFailMessages());
     }
 
-    // public function testRestoreTimeoutMessages()
-    // {
-    //     $driver = $this->getDriver();
-    //     $driver->clear();
+    public function testRestoreTimeoutMessages()
+    {
+        $driver = $this->getDriver();
+        $driver->clear();
 
-    //     $message = new Message;
-    //     $message->setMessage('a');
-    //     $message->setWorkingTimeout(1);
-    //     $messageId = $driver->push($message);
-    //     $this->assertNotEmpty($messageId);
+        $message = new Message;
+        $message->setMessage('a');
+        $message->setWorkingTimeout(1);
+        $messageId = $driver->push($message);
+        $this->assertNotEmpty($messageId);
 
-    //     $message = $this->getDriver()->pop();
-    //     $this->assertNotEmpty($message->getMessageId());
+        $message = $driver->pop();
+        $this->assertNotEmpty($message->getMessageId());
 
-    //     sleep(1);
+        sleep(1);
 
-    //     $message = $this->getDriver()->pop();
-    //     $this->assertNull($message);
+        $message = $driver->pop();
+        $this->assertNull($message);
 
-    //     $this->assertEquals(1, $driver->restoreTimeoutMessages());
-    // }
+        $this->assertEquals(1, $driver->restoreTimeoutMessages());
+    }
 
 }
