@@ -95,6 +95,7 @@ trait TAMQP
      */
     protected function getConnection(): AbstractConnection
     {
+        $poolName = null;
         if(null === $this->poolName)
         {
             $class = BeanFactory::getObjectClass($this);
