@@ -3,7 +3,6 @@ namespace Imi\AMQP\Queue;
 
 use Imi\Bean\BeanFactory;
 use Imi\Redis\RedisManager;
-use Imi\Queue\Model\Message;
 use Imi\Bean\Annotation\Bean;
 use Imi\Queue\Enum\QueueType;
 use Imi\Queue\Contract\IMessage;
@@ -13,7 +12,6 @@ use Imi\AMQP\Queue\JsonAMQPMessage;
 use Imi\AMQP\Queue\QueueAMQPMessage;
 use Imi\Util\Traits\TDataToProperty;
 use Imi\Queue\Exception\QueueException;
-use PhpAmqpLib\Exception\AMQPConnectionClosedException;
 
 /**
  * AMQP 队列驱动
