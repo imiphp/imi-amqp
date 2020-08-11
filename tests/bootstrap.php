@@ -4,6 +4,7 @@ use Imi\App;
 use Swoole\Event;
 use Swoole\Runtime;
 use Imi\Event\EventParam;
+use Imi\Pool\PoolManager;
 use Yurun\Swoole\CoPool\CoPool;
 use Yurun\Swoole\CoPool\Interfaces\ICoTask;
 use Yurun\Swoole\CoPool\Interfaces\ITaskParam;
@@ -199,6 +200,7 @@ go(function() use(&$statusCode){
                 $statusCode = $ee->getStatus();
             }
         }
+        PoolManager::clearPools();
         Event::exit();
     });
 });

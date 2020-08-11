@@ -12,13 +12,6 @@ use Imi\AMQP\Annotation\Exchange;
 class QueueConsumer extends BaseConsumer
 {
     /**
-     * 自增
-     *
-     * @var integer
-     */
-    private $atomic = 0;
-
-    /**
      * 结果通道
      *
      * @var \Swoole\Coroutine\Channel
@@ -82,8 +75,7 @@ class QueueConsumer extends BaseConsumer
     {
         if($this->channel)
         {
-            $this->channel->close();
-            $this->channel = null;
+            $this->stop();
         }
         $this->connection = $this->getConnection();
         $this->channel = $this->connection->channel();

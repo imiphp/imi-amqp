@@ -2,6 +2,7 @@
 namespace Imi\AMQP\Base\Traits;
 
 use Imi\Log\Log;
+use Imi\Util\Coroutine;
 use Imi\Bean\BeanFactory;
 use Imi\Pool\PoolManager;
 use Imi\AMQP\Pool\AMQPPool;
@@ -12,6 +13,7 @@ use Imi\AMQP\Annotation\Consumer;
 use Imi\AMQP\Annotation\Exchange;
 use Imi\AMQP\Annotation\Publisher;
 use Imi\AMQP\Annotation\Connection;
+use Imi\AMQP\Swoole\AMQPSwooleConnection;
 use Imi\Bean\Annotation\AnnotationManager;
 use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -134,7 +136,15 @@ trait TAMQP
         }
         else
         {
-            return new AMQPStreamConnection(
+            if(Coroutine::isIn())
+            {
+                $className = AMQPSwooleConnection::class;
+            }
+            else
+            {
+                $className = AMQPStreamConnection::class;
+            }
+            return new $className(
                 $connectionConfig->host,
                 $connectionConfig->port,
                 $connectionConfig->user,
