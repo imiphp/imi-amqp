@@ -26,7 +26,7 @@
         }
     },
     "scripts": {
-        "test": "./vendor/bin/phpunit -c ./tests/phpunit.xml"
+        "test": "./tests/phpunit -c ./tests/phpunit.xml"
     },
     "extra": {
         "ide-helper": {

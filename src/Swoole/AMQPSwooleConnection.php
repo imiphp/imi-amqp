@@ -8,21 +8,6 @@ use PhpAmqpLib\Connection\AbstractConnection;
  */
 class AMQPSwooleConnection extends AbstractConnection
 {
-    /**
-     * @param string $host
-     * @param int $port
-     * @param string $user
-     * @param string $password
-     * @param string $vhost
-     * @param bool $insist
-     * @param string $login_method
-     * @param null $login_response
-     * @param string $locale
-     * @param float $read_timeout
-     * @param bool $keepalive
-     * @param int $write_timeout
-     * @param int $heartbeat
-     */
     public function __construct(
         $host,
         $port,

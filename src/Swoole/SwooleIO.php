@@ -1,11 +1,7 @@
 <?php
 namespace Imi\AMQP\Swoole;
 
-use Swoole;
-use PhpAmqpLib\Wire\AMQPWriter;
-use PhpAmqpLib\Helper\MiscHelper;
 use PhpAmqpLib\Wire\IO\AbstractIO;
-use PhpAmqpLib\Exception\AMQPIOException;
 use PhpAmqpLib\Exception\AMQPRuntimeException;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Exception\AMQPConnectionClosedException;
@@ -17,35 +13,11 @@ class SwooleIO extends AbstractIO
 {
     const READ_BUFFER_WAIT_INTERVAL = 100000;
 
-    /** @var string */
-    protected $host;
-
-    /** @var int */
-    protected $port;
-
-    /** @var float */
-    protected $connection_timeout;
-
     /** @var float */
     protected $read_write_timeout;
 
     /** @var resource */
     protected $context;
-
-    /** @var bool */
-    protected $keepalive;
-
-    /** @var int */
-    protected $heartbeat;
-
-    /** @var float */
-    protected $last_read;
-
-    /** @var float */
-    protected $last_write;
-
-    /** @var array */
-    protected $last_error;
 
     /**
      * @var bool
@@ -57,23 +29,11 @@ class SwooleIO extends AbstractIO
      */
     protected $ssl = false;
 
-    /** @var int */
-    protected $initial_heartbeat;
-
     /** @var Swoole\Coroutine\Client */
     private $sock;
 
     private $buffer = '';
 
-    /**
-     * @param string $host
-     * @param int $port
-     * @param float $connection_timeout
-     * @param float $read_write_timeout
-     * @param null $context
-     * @param bool $keepalive
-     * @param int $heartbeat
-     */
     public function __construct(
         $host,
         $port,
@@ -97,14 +57,14 @@ class SwooleIO extends AbstractIO
     }
 
     /**
-     * Sets up the stream connection
-     *
+     * Set ups the connection.
+     * @return void
+     * @throws \PhpAmqpLib\Exception\AMQPIOException
      * @throws \PhpAmqpLib\Exception\AMQPRuntimeException
-     * @throws \Exception
      */
     public function connect()
     {
-        $sock = new Swoole\Coroutine\Client(SWOOLE_SOCK_TCP);
+        $sock = new \Swoole\Coroutine\Client(SWOOLE_SOCK_TCP);
         if (!$sock->connect($this->host, $this->port, $this->connection_timeout))
         {
             throw new AMQPRuntimeException(
@@ -130,8 +90,12 @@ class SwooleIO extends AbstractIO
 
     /**
      * @param int $len
+     * @return string
+     * @throws \PhpAmqpLib\Exception\AMQPIOException
      * @throws \PhpAmqpLib\Exception\AMQPRuntimeException
-     * @return mixed|string
+     * @throws \PhpAmqpLib\Exception\AMQPSocketException
+     * @throws \PhpAmqpLib\Exception\AMQPTimeoutException
+     * @throws \PhpAmqpLib\Exception\AMQPConnectionClosedException
      */
     public function read($len)
     {
@@ -181,8 +145,9 @@ class SwooleIO extends AbstractIO
 
     /**
      * @param string $data
-     * @return mixed|void
-     * @throws \PhpAmqpLib\Exception\AMQPRuntimeException
+     * @throws \PhpAmqpLib\Exception\AMQPIOException
+     * @throws \PhpAmqpLib\Exception\AMQPSocketException
+     * @throws \PhpAmqpLib\Exception\AMQPConnectionClosedException
      * @throws \PhpAmqpLib\Exception\AMQPTimeoutException
      */
     public function write($data)
@@ -202,6 +167,9 @@ class SwooleIO extends AbstractIO
         $this->last_write = microtime(true);
     }
 
+    /**
+     * @return void
+     */
     public function close()
     {
         if($this->sock)

@@ -1,25 +1,11 @@
 <?php
 
 use Imi\App;
-use Swoole\Event;
 use Swoole\Runtime;
 use Imi\Event\EventParam;
-use Imi\Pool\PoolManager;
 use Yurun\Swoole\CoPool\CoPool;
 use Yurun\Swoole\CoPool\Interfaces\ICoTask;
 use Yurun\Swoole\CoPool\Interfaces\ITaskParam;
-
-$loader = require dirname(__DIR__) . '/vendor/autoload.php';
-
-(function(){
-    $redis = new \Redis;
-    if(!$redis->connect('127.0.0.1', 6379))
-    {
-        exit('Redis connect failed');
-    }
-    $redis->del($redis->keys('imi-amqp:*'));
-    $redis->close();
-})();
 
 /**
  * 开启服务器
@@ -158,51 +144,34 @@ function test()
     }
 }
 
+(function(){
+    $redis = new \Redis;
+    if(!$redis->connect('127.0.0.1', 6379))
+    {
+        exit('Redis connect failed');
+    }
+    $redis->del($redis->keys('imi-amqp:*'));
+    $redis->close();
+})();
+
 register_shutdown_function(function(){
     echo 'Shutdown memory:', PHP_EOL, `free -m`, PHP_EOL;
 });
 
 echo 'Before start server memory:', PHP_EOL, `free -m`, PHP_EOL;
-Runtime::enableCoroutine();
-go('startServer');
-Event::wait();
-Runtime::enableCoroutine(false);
+startServer();
 echo 'After start server memory:', PHP_EOL, `free -m`, PHP_EOL;
 
 App::initFramework('ImiApp');
 
-$statusCode = 0;
-go(function() use(&$statusCode){
-    go(function() use(&$statusCode){
-        \Imi\Event\Event::on('IMI.INIT_TOOL', function(EventParam $param){
-            $data = $param->getData();
-            $data['skip'] = true;
-            \Imi\Tool\Tool::init();
-        });
-        \Imi\Event\Event::on('IMI.INITED', function(EventParam $param){
-            App::initWorker();
-            Runtime::enableCoroutine();
-            $param->stopPropagation();
-        }, 1);
-        App::run('ImiApp');
-        try {
-            if($phpunitPath = getenv('TEST_PHPUNIT_PATH'))
-            {
-                require $phpunitPath;
-            }
-            PHPUnit\TextUI\Command::main();
-        } catch (\Swoole\ExitException $e) {
-            $statusCode = $e->getStatus();
-        } catch(\PHPUnit\TextUI\Exception $e2) {
-            $ee = $e2->getPrevious();
-            if($ee instanceof \Swoole\ExitException)
-            {
-                $statusCode = $ee->getStatus();
-            }
-        }
-        PoolManager::clearPools();
-        Event::exit();
-    });
+\Imi\Event\Event::on('IMI.INIT_TOOL', function(EventParam $param){
+    $data = $param->getData();
+    $data['skip'] = true;
+    \Imi\Tool\Tool::init();
 });
-Event::wait();
-exit($statusCode);
+\Imi\Event\Event::on('IMI.INITED', function(EventParam $param){
+    App::initWorker();
+    Runtime::enableCoroutine();
+    $param->stopPropagation();
+}, 1);
+App::run('ImiApp');
