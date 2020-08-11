@@ -448,6 +448,7 @@ class TestConsumer extends BaseConsumer
                         'redisPoolName;'=>  'redis',
                         // Redis 键名前缀
                         'redisPrefix'   =>  'test1:',
+                        // 可选配置：
                         // 支持消息删除功能，依赖 Redis
                         'supportDelete' =>  true,
                         // 支持消费超时队列功能，依赖 Redis，并且自动增加一个队列
@@ -458,6 +459,8 @@ class TestConsumer extends BaseConsumer
                         'timespan'  =>  0.03,
                         // 本地缓存的队列长度。由于 AMQP 不支持主动pop，而是主动推送，所以本地会有缓存队列，这个队列不宜过大。
                         'queueLength'   =>  16,
+                        // 消息类名
+                        'message'   =>  \Imi\AMQP\Queue\JsonAMQPMessage::class,
                     ]
                 ],
             ],

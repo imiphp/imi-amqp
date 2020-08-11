@@ -99,6 +99,13 @@ class AMQPQueueDriver implements IQueueDriver
     protected $queueLength = 16;
 
     /**
+     * 消息类名
+     *
+     * @var string
+     */
+    protected $message = JsonAMQPMessage::class;
+
+    /**
      * 发布者
      *
      * @var \Imi\AMQP\Queue\QueuePublisher
@@ -206,7 +213,7 @@ class AMQPQueueDriver implements IQueueDriver
                 'exchange'      =>  $exchangeName,
                 'queue'         =>  $queueName,
                 'routingKey'    =>  self::ROUTING_NORMAL,
-                'message'       =>  JsonAMQPMessage::class,
+                'message'       =>  $this->message,
             ],
         ];
         $delayQueues = [
@@ -254,7 +261,7 @@ class AMQPQueueDriver implements IQueueDriver
                     'exchange'      =>  $exchangeName,
                     'routingKey'    =>  self::ROUTING_TIMEOUT,
                     'queue'         =>  $timeoutQueueName,
-                    'message'       =>  JsonAMQPMessage::class,
+                    'message'       =>  $this->message,
                 ],
             ], $this->poolName);
         }
@@ -283,7 +290,7 @@ class AMQPQueueDriver implements IQueueDriver
                     'exchange'      =>  $exchangeName,
                     'routingKey'    =>  self::ROUTING_FAIL,
                     'queue'         =>  $failQueueName,
-                    'message'       =>  JsonAMQPMessage::class,
+                    'message'       =>  $this->message,
                 ],
             ], $this->poolName);
         }
