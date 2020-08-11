@@ -50,8 +50,11 @@ abstract class BaseConsumer implements IConsumer
      */
     public function stop()
     {
-        $this->channel->close();
-        $this->channel = null;
+        if($this->channel)
+        {
+            $this->channel->close();
+            $this->channel = null;
+        }
     }
 
     /**

@@ -18,7 +18,7 @@
 ```json
 {
     "require": {
-        "imiphp/imi-amqp": "^1.0.0"
+        "imiphp/imi-amqp": "^1.2.0"
     }
 }
 ```
@@ -398,6 +398,75 @@ class TestConsumer extends BaseConsumer
 | heartbeat | 心跳时间，默认`0` |
 | channelRpcTimeout | 频道 RPC 超时时间，默认`0.0` |
 | sslProtocol | ssl 协议，默认`null` |
+
+### 队列组件支持
+
+本组件额外实现了 [imiphp/imi-queue](https://github.com/imiphp/imi-queue) 的接口，可以用 Queue 组件的 API 进行调用。
+
+只需要将队列驱动配置为：`AMQPQueueDriver`
+
+配置示例：
+
+```php
+[
+    'components'    =>  [
+        'AMQP'  =>  'Imi\AMQP',
+    ],
+    'beans' =>  [
+        'AutoRunProcessManager' =>  [
+            'processes' =>  [
+                // 加入队列消费进程，非必须，你也可以自己写进程消费
+                'QueueConsumer',
+            ],
+        ],
+        'imiQueue'  =>  [
+            // 默认队列
+            'default'   =>  'test1',
+            // 队列列表
+            'list'  =>  [
+                // 队列名称
+                'test1' =>  [
+                    // 使用的队列驱动
+                    'driver'        =>  'AMQPQueueDriver',
+                    // 消费协程数量
+                    'co'            =>  1,
+                    // 消费进程数量；可能会受进程分组影响，以同一组中配置的最多进程数量为准
+                    'process'       =>  1,
+                    // 消费循环尝试 pop 的时间间隔，单位：秒（仅使用消费者类时有效）
+                    'timespan'      =>  0.1,
+                    // 进程分组名称
+                    'processGroup'  =>  'a',
+                    // 自动消费
+                    'autoConsumer'  =>  true,
+                    // 消费者类
+                    'consumer'      =>  'AConsumer',
+                    // 驱动类所需要的参数数组
+                    'config'        =>  [
+                        // AMQP 连接池名称
+                        'poolName'      =>  'amqp',
+                        // Redis 连接池名称
+                        'redisPoolName;'=>  'redis',
+                        // Redis 键名前缀
+                        'redisPrefix'   =>  'test1:',
+                        // 支持消息删除功能，依赖 Redis
+                        'supportDelete' =>  true,
+                        // 支持消费超时队列功能，依赖 Redis，并且自动增加一个队列
+                        'supportTimeout' =>  true,
+                        // 支持消费失败队列功能，自动增加一个队列
+                        'supportFail' =>  true,
+                        // 循环尝试 pop 的时间间隔，单位：秒
+                        'timespan'  =>  0.03,
+                        // 本地缓存的队列长度。由于 AMQP 不支持主动pop，而是主动推送，所以本地会有缓存队列，这个队列不宜过大。
+                        'queueLength'   =>  16,
+                    ]
+                ],
+            ],
+        ],
+    ]
+]
+```
+
+消费者类写法，与`imi-queue`组件用法一致。
 
 ## 免费技术支持
 

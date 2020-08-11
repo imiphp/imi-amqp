@@ -11,7 +11,9 @@
     <testsuites>
         <testsuite name="RabbitMQ">
             <directory>RabbitMQ</directory>
-            <file>*.php</file>
+        </testsuite>
+        <testsuite name="Queue">
+            <directory>Queue</directory>
         </testsuite>
     </testsuites>
 </phpunit>

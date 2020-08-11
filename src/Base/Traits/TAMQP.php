@@ -2,6 +2,7 @@
 namespace Imi\AMQP\Base\Traits;
 
 use Imi\Log\Log;
+use Imi\Util\Coroutine;
 use Imi\Bean\BeanFactory;
 use Imi\Pool\PoolManager;
 use Imi\AMQP\Pool\AMQPPool;
@@ -12,6 +13,7 @@ use Imi\AMQP\Annotation\Consumer;
 use Imi\AMQP\Annotation\Exchange;
 use Imi\AMQP\Annotation\Publisher;
 use Imi\AMQP\Annotation\Connection;
+use Imi\AMQP\Swoole\AMQPSwooleConnection;
 use Imi\Bean\Annotation\AnnotationManager;
 use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -68,6 +70,13 @@ trait TAMQP
     protected $consumers;
 
     /**
+     * 连接池名称
+     *
+     * @var string
+     */
+    protected $poolName;
+
+    /**
      * 初始化配置
      *
      * @return void
@@ -88,33 +97,54 @@ trait TAMQP
      */
     protected function getConnection(): AbstractConnection
     {
-        $class = BeanFactory::getObjectClass($this);
-        $connectionConfig = AnnotationManager::getClassAnnotations($class, Connection::class)[0] ?? null;
-        if($connectionConfig)
+        $poolName = null;
+        if(null === $this->poolName)
         {
-            if(null === $connectionConfig->poolName)
+            $class = BeanFactory::getObjectClass($this);
+            $connectionConfig = AnnotationManager::getClassAnnotations($class, Connection::class)[0] ?? null;
+            if($connectionConfig)
             {
-                if(null !== $connectionConfig->host && null !== $connectionConfig->port && null !== $connectionConfig->user && null !== $connectionConfig->password)
+                if(null === $connectionConfig->poolName)
                 {
-                    $connectionByPool = false;
+                    if(null !== $connectionConfig->host && null !== $connectionConfig->port && null !== $connectionConfig->user && null !== $connectionConfig->password)
+                    {
+                        $connectionByPool = false;
+                    }
+                    else
+                    {
+                        $connectionByPool = true;
+                    }
                 }
-                else
-                {
-                    $connectionByPool = true;
-                }
+            }
+            else
+            {
+                $connectionByPool = true;
+            }
+            if($connectionByPool)
+            {
+                $poolName = $connectionConfig->poolName ?? $this->amqp->getDefaultPoolName();
             }
         }
         else
         {
             $connectionByPool = true;
+            $poolName = $this->poolName;
         }
-        if($connectionByPool)
+        if($connectionByPool || $poolName)
         {
-            return AMQPPool::getInstance($connectionConfig->poolName ?? $this->amqp->getDefaultPoolName());
+            return AMQPPool::getInstance($poolName);
         }
         else
         {
-            return new AMQPStreamConnection(
+            if(Coroutine::isIn())
+            {
+                $className = AMQPSwooleConnection::class;
+            }
+            else
+            {
+                $className = AMQPStreamConnection::class;
+            }
+            return new $className(
                 $connectionConfig->host,
                 $connectionConfig->port,
                 $connectionConfig->user,
@@ -142,12 +172,12 @@ trait TAMQP
     {
         foreach($this->exchanges as $exchange)
         {
-            Log::debug(sprintf('exchangeDeclare: %s, %s', $exchange->name, $exchange->type));
+            Log::debug(sprintf('exchangeDeclare: %s, type: %s', $exchange->name, $exchange->type));
             $this->channel->exchange_declare($exchange->name, $exchange->type, $exchange->passive, $exchange->durable, $exchange->autoDelete, $exchange->internal, $exchange->nowait, new AMQPTable($exchange->arguments), $exchange->ticket);
         }
         foreach($this->queues as $queue)
         {
-            Log::debug(sprintf('queueDeclare: %s', $queue->name, $exchange->type));
+            Log::debug(sprintf('queueDeclare: type: %s', $queue->name, $exchange->type));
             $this->channel->queue_declare($queue->name, $queue->passive, $queue->durable, $queue->exclusive, $queue->autoDelete, $queue->nowait, new AMQPTable($queue->arguments), $queue->ticket);
         }
     }
@@ -170,7 +200,7 @@ trait TAMQP
                 }
                 foreach((array)$publisher->exchange as $exchangeName)
                 {
-                    Log::debug(sprintf('queueBind: %s, %s, %s', $queueName, $exchangeName, $publisher->routingKey));
+                    Log::debug(sprintf('queueBind: %s, exchangeName: %s, routingKey: %s', $queueName, $exchangeName, $publisher->routingKey));
                     $this->channel->queue_bind($queueName, $exchangeName, $publisher->routingKey);
                 }
             }
@@ -191,11 +221,39 @@ trait TAMQP
             {
                 foreach((array)$consumer->exchange as $exchangeName)
                 {
-                    Log::debug(sprintf('queueBind: %s, %s, %s', $queueName, $exchangeName, $consumer->routingKey));
+                    Log::debug(sprintf('queueBind: %s, exchangeName: %s, routingKey: %s', $queueName, $exchangeName, $consumer->routingKey));
                     $this->channel->queue_bind($queueName, $exchangeName, $consumer->routingKey);
                 }
             }
         }
+    }
+
+    /**
+     * Get 连接
+     *
+     * @return \PhpAmqpLib\Connection\AbstractConnection
+     */ 
+    public function getAMQPConnection()
+    {
+        if(!$this->connection)
+        {
+            $this->connection = $this->getConnection();
+        }
+        return $this->connection;
+    }
+
+    /**
+     * Get 频道
+     *
+     * @return \PhpAmqpLib\Channel\AMQPChannel
+     */ 
+    public function getAMQPChannel()
+    {
+        if(!$this->channel || !$this->channel->is_open())
+        {
+            $this->channel = $this->getAMQPConnection()->channel();
+        }
+        return $this->channel;
     }
 
 }
