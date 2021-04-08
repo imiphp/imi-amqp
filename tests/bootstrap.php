@@ -6,28 +6,24 @@ use Imi\Event\EventParam;
 use Imi\Server\Event\Param\WorkerExitEventParam;
 use Swoole\Coroutine;
 use Swoole\Runtime;
-use Yurun\Swoole\CoPool\CoPool;
-use Yurun\Swoole\CoPool\Interfaces\ICoTask;
-use Yurun\Swoole\CoPool\Interfaces\ITaskParam;
+use function Yurun\Swoole\Coroutine\batch;
 
 /**
  * @return bool
  */
 function checkHttpServerStatus()
 {
-    $serverStarted = false;
     for ($i = 0; $i < 60; ++$i)
     {
         sleep(1);
         $context = stream_context_create(['http' => ['timeout' => 1]]);
         if ('' === @file_get_contents('http://127.0.0.1:8080/', false, $context))
         {
-            $serverStarted = true;
-            break;
+            return true;
         }
     }
 
-    return $serverStarted;
+    return false;
 }
 
 /**
@@ -46,46 +42,25 @@ function startServer()
         ],
     ];
 
-    $pool = new CoPool(swoole_cpu_num(), 16,
-        // 定义任务匿名类，当然你也可以定义成普通类，传入完整类名
-        // @phpstan-ignore-next-line
-        new class() implements ICoTask {
-            /**
-             * 执行任务
-             *
-             * @param ITaskParam $param
-             *
-             * @return mixed
-             */
-            public function run(ITaskParam $param)
-            {
-                ($param->getData())();
-                // 执行任务
-                return true; // 返回任务执行结果，非必须
-            }
-        }
-    );
-    $pool->run();
-
-    $taskCount = count($servers);
-    $completeTaskCount = 0;
+    $callbacks = [];
     foreach ($servers as $name => $options)
     {
-        // 增加任务，异步回调
-        $pool->addTaskAsync(function () use ($options, $name) {
+        $callbacks[] = function () use ($options, $name) {
             // start server
-            $cmd = $options['start'];
+            $cmd = 'nohup ' . $options['start'] . ' > /dev/null 2>&1';
             echo "Starting {$name}...", \PHP_EOL;
-            `{$cmd}`;
+            shell_exec($cmd);
 
             register_shutdown_function(function () use ($name, $options) {
+                \Swoole\Runtime::enableCoroutine(false);
                 // stop server
                 $cmd = $options['stop'];
                 echo "Stoping {$name}...", \PHP_EOL;
-                `{$cmd}`;
+                shell_exec($cmd);
                 echo "{$name} stoped!", \PHP_EOL, \PHP_EOL;
             });
 
+            // @phpstan-ignore-next-line
             if (($options['checkStatus'])())
             {
                 echo "{$name} started!", \PHP_EOL;
@@ -94,17 +69,10 @@ function startServer()
             {
                 throw new \RuntimeException("{$name} start failed");
             }
-        }, function (ITaskParam $param, $data) use (&$completeTaskCount) {
-            // 异步回调
-            ++$completeTaskCount;
-        });
+        };
     }
 
-    while ($completeTaskCount < $taskCount)
-    {
-        usleep(10000);
-    }
-    $pool->stop();
+    batch($callbacks, 120, max(swoole_cpu_num() - 1, 1));
 }
 
 (function () {
@@ -131,6 +99,9 @@ startServer();
 }, 1);
 App::run('ImiApp');
 
-Coroutine::defer(function () {
-    Event::trigger('IMI.MAIN_SERVER.WORKER.EXIT', [], null, WorkerExitEventParam::class);
-});
+if (version_compare(\SWOOLE_VERSION, '4.4', '>='))
+{
+    Coroutine::defer(function () {
+        Event::trigger('IMI.MAIN_SERVER.WORKER.EXIT', [], null, WorkerExitEventParam::class);
+    });
+}
