@@ -1,7 +1,10 @@
 <?php
 
 use Imi\App;
+use Imi\Event\Event;
 use Imi\Event\EventParam;
+use Imi\Server\Event\Param\WorkerExitEventParam;
+use Swoole\Coroutine;
 use Swoole\Runtime;
 use Yurun\Swoole\CoPool\CoPool;
 use Yurun\Swoole\CoPool\Interfaces\ICoTask;
@@ -104,54 +107,6 @@ function startServer()
     $pool->stop();
 }
 
-/**
- * @return void
- */
-function test()
-{
-    $descriptorspec = [
-        ['pipe', 'r'],  // 标准输入，子进程从此管道中读取数据
-        ['pipe', 'w'],  // 标准输出，子进程向此管道中写入数据
-    ];
-    $cmd = __DIR__ . '/phpunit -c ' . __DIR__ . '/phpunit.xml';
-    $pipes = [];
-    $processHndler = proc_open($cmd, $descriptorspec, $pipes);
-    $records2 = [];
-    while (!feof($pipes[1]))
-    {
-        $content = fgets($pipes[1]);
-        if (false !== $content)
-        {
-            if (2 === count($records2))
-            {
-                array_shift($records2);
-            }
-            $records2[] = $content;
-            echo $content;
-        }
-    }
-
-    do
-    {
-        $status = proc_get_status($processHndler);
-    } while ($status['running'] ?? false);
-    foreach ($pipes as $pipe)
-    {
-        fclose($pipe);
-    }
-    proc_close($processHndler);
-
-    // @phpstan-ignore-next-line
-    if (version_compare(\SWOOLE_VERSION, '4.4', '<') && 255 === ($status['exitcode'] ?? 0) && 'OK' === substr($records2[0] ?? '', 0, 2))
-    {
-        exit(0);
-    }
-    else
-    {
-        exit($status['exitcode'] ?? 0);
-    }
-}
-
 (function () {
     $redis = new \Redis();
     if (!$redis->connect(imiGetEnv('REDIS_SERVER_HOST', '127.0.0.1'), 6379))
@@ -162,15 +117,7 @@ function test()
     $redis->close();
 })();
 
-register_shutdown_function(function () {
-    echo 'Shutdown memory:', \PHP_EOL, `free -m`, \PHP_EOL;
-});
-
-echo 'Before start server memory:', \PHP_EOL, `free -m`, \PHP_EOL;
 startServer();
-echo 'After start server memory:', \PHP_EOL, `free -m`, \PHP_EOL;
-
-App::initFramework('ImiApp');
 
 \Imi\Event\Event::on('IMI.INIT_TOOL', function (EventParam $param) {
     $data = $param->getData();
@@ -178,8 +125,12 @@ App::initFramework('ImiApp');
     \Imi\Tool\Tool::init();
 });
 \Imi\Event\Event::on('IMI.INITED', function (EventParam $param) {
-    App::initWorker();
     Runtime::enableCoroutine();
+    App::initWorker();
     $param->stopPropagation();
 }, 1);
 App::run('ImiApp');
+
+Coroutine::defer(function () {
+    Event::trigger('IMI.MAIN_SERVER.WORKER.EXIT', [], null, WorkerExitEventParam::class);
+});
