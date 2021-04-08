@@ -3,6 +3,7 @@
 namespace Imi\AMQP\Pool;
 
 use Imi\Pool\BasePoolResource;
+use Imi\Util\Coroutine;
 use PhpAmqpLib\Connection\AbstractConnection;
 
 /**
@@ -45,7 +46,11 @@ class AMQPResource extends BasePoolResource
      */
     public function close()
     {
-        $this->connection->close();
+        if (Coroutine::isIn())
+        {
+            $this->connection->close();
+        }
+        $this->connection->getIO()->close();
     }
 
     /**
