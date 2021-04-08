@@ -11,7 +11,7 @@ use Imi\Bean\Annotation\Bean;
 
 /**
  * @Bean("TestPublisher")
- * @Connection(host="127.0.0.1", port=5672, user="guest", password="guest")
+ * @Connection(host=AMQP_SERVER_HOST, port=5672, user="guest", password="guest")
  * @Publisher(tag="tag-imi", queue="queue-imi-1", exchange="exchange-imi", routingKey="imi-1")
  * @Queue(name="queue-imi-1", routingKey="imi-1")
  * @Exchange(name="exchange-imi")

@@ -154,7 +154,7 @@ function test()
 
 (function () {
     $redis = new \Redis();
-    if (!$redis->connect('127.0.0.1', 6379))
+    if (!$redis->connect(imiGetEnv('REDIS_SERVER_HOST', '127.0.0.1'), 6379))
     {
         exit('Redis connect failed');
     }
