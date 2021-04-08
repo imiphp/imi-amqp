@@ -37,7 +37,6 @@ class TestProcess extends BaseProcess
     private function runConsumer(IConsumer $consumer): void
     {
         go(function () use ($consumer) {
-            /* @var \Imi\AMQP\Contract\IConsumer $instance */
             try
             {
                 $consumer->run();

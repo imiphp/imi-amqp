@@ -106,36 +106,9 @@ return [
         ],
     ],
 
-    // 数据库配置
-    'db'    => [
-        // 数默认连接池名
-        'defaultPool'    => 'maindb',
-    ],
-
     // redis 配置
     'redis' => [
         // 数默认连接池名
         'defaultPool'   => 'redis',
-    ],
-
-    // 内存表配置
-    'memoryTable'   => [
-        'connectContext'    => [
-            'class'  => \Imi\Server\ConnectContext\StoreHandler\MemoryTable\ConnectContextOption::class,
-            'lockId' => 'redisConnectContextLock',
-            'size'   => 65536,
-        ],
-    ],
-
-    // 锁
-    'lock'  => [
-        'list'  => [
-            'redisConnectContextLock' => [
-                'class'     => 'RedisLock',
-                'options'   => [
-                    'poolName'  => 'redis',
-                ],
-            ],
-        ],
     ],
 ];

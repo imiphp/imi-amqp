@@ -38,7 +38,7 @@ class IndexController extends HttpController
      */
     public function index()
     {
-        return $this->response->write('');
+        return $this->response->write('imi');
     }
 
     /**

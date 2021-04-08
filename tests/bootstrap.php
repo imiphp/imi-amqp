@@ -17,7 +17,9 @@ function checkHttpServerStatus()
     {
         sleep(1);
         $context = stream_context_create(['http' => ['timeout' => 1]]);
-        if ('' === @file_get_contents('http://127.0.0.1:8080/', false, $context))
+        $body = @file_get_contents('http://127.0.0.1:8080/', false, $context);
+        var_dump($body);
+        if ('imi' === $body)
         {
             return true;
         }
@@ -60,7 +62,6 @@ function startServer()
                 echo "{$name} stoped!", \PHP_EOL, \PHP_EOL;
             });
 
-            // @phpstan-ignore-next-line
             if (($options['checkStatus'])())
             {
                 echo "{$name} started!", \PHP_EOL;
@@ -99,6 +100,7 @@ startServer();
 }, 1);
 App::run('ImiApp');
 
+// @phpstan-ignore-next-line
 if (version_compare(\SWOOLE_VERSION, '4.4', '>='))
 {
     Coroutine::defer(function () {
