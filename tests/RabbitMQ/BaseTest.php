@@ -1,4 +1,5 @@
 <?php
+
 namespace Imi\AMQP\Test\RabbitMQ;
 
 use PHPUnit\Framework\TestCase;

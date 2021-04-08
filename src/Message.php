@@ -1,24 +1,25 @@
 <?php
+
 namespace Imi\AMQP;
 
-use Imi\App;
 use Imi\AMQP\Contract\IMessage;
+use Imi\App;
 use PhpAmqpLib\Message\AMQPMessage;
 
 /**
- * AMQP 消息
+ * AMQP 消息.
  */
 class Message implements IMessage
 {
     /**
-     * 主体内容
+     * 主体内容.
      *
      * @var mixed
      */
     protected $bodyData;
 
     /**
-     * 配置属性
+     * 配置属性.
      *
      * @var array
      */
@@ -28,7 +29,7 @@ class Message implements IMessage
     ];
 
     /**
-     * 路由键
+     * 路由键.
      *
      * @var string
      */
@@ -38,7 +39,7 @@ class Message implements IMessage
      * mandatory标志位
      * 当mandatory标志位设置为true时，如果exchange根据自身类型和消息routeKey无法找到一个符合条件的queue，那么会调用basic.return方法将消息返还给生产者；当mandatory设为false时，出现上述情形broker会直接将消息扔掉。
      *
-     * @var boolean
+     * @var bool
      */
     protected $mandatory = false;
 
@@ -46,26 +47,26 @@ class Message implements IMessage
      * immediate标志位
      * 当immediate标志位设置为true时，如果exchange在将消息route到queue(s)时发现对应的queue上没有消费者，那么这条消息不会放入队列中。当与消息routeKey关联的所有queue(一个或多个)都没有消费者时，该消息会通过basic.return方法返还给生产者。
      *
-     * @var boolean
+     * @var bool
      */
     protected $immediate = false;
 
     /**
-     * ticket
+     * ticket.
      *
      * @var int|null
      */
     protected $ticket = null;
 
     /**
-     * 格式处理
+     * 格式处理.
      *
-     * @var string
+     * @var string|null
      */
     protected $format;
 
     /**
-     * AMQP 消息
+     * AMQP 消息.
      *
      * @var \PhpAmqpLib\Message\AMQPMessage
      */
@@ -73,26 +74,25 @@ class Message implements IMessage
 
     public function __construct()
     {
-        
     }
 
     /**
-     * Get 配置属性
+     * Get 配置属性.
      *
      * @return array
-     */ 
+     */
     public function getProperties(): array
     {
         return $this->properties;
     }
 
     /**
-     * Set 配置属性
+     * Set 配置属性.
      *
-     * @param array $properties  配置属性
+     * @param array $properties 配置属性
      *
      * @return self
-     */ 
+     */
     public function setProperties(array $properties)
     {
         $this->properties = $properties;
@@ -101,22 +101,22 @@ class Message implements IMessage
     }
 
     /**
-     * Get 路由键
+     * Get 路由键.
      *
      * @return string
-     */ 
+     */
     public function getRoutingKey(): string
     {
         return $this->routingKey;
     }
 
     /**
-     * Set 路由键
+     * Set 路由键.
      *
-     * @param string $routingKey  路由键
+     * @param string $routingKey 路由键
      *
      * @return self
-     */ 
+     */
     public function setRoutingKey(string $routingKey)
     {
         $this->routingKey = $routingKey;
@@ -127,8 +127,8 @@ class Message implements IMessage
     /**
      * Get 当mandatory标志位设置为true时，如果exchange根据自身类型和消息routeKey无法找到一个符合条件的queue，那么会调用basic.return方法将消息返还给生产者；当mandatory设为false时，出现上述情形broker会直接将消息扔掉。
      *
-     * @return boolean
-     */ 
+     * @return bool
+     */
     public function getMandatory(): bool
     {
         return $this->mandatory;
@@ -138,7 +138,7 @@ class Message implements IMessage
      * Set 当mandatory标志位设置为true时，如果exchange根据自身类型和消息routeKey无法找到一个符合条件的queue，那么会调用basic.return方法将消息返还给生产者；当mandatory设为false时，出现上述情形broker会直接将消息扔掉。
      *
      * @return self
-     */ 
+     */
     public function setMandatory(bool $mandatory)
     {
         $this->mandatory = $mandatory;
@@ -149,8 +149,8 @@ class Message implements IMessage
     /**
      * Get 当immediate标志位设置为true时，如果exchange在将消息route到queue(s)时发现对应的queue上没有消费者，那么这条消息不会放入队列中。当与消息routeKey关联的所有queue(一个或多个)都没有消费者时，该消息会通过basic.return方法返还给生产者。
      *
-     * @return boolean
-     */ 
+     * @return bool
+     */
     public function getImmediate(): bool
     {
         return $this->immediate;
@@ -160,7 +160,7 @@ class Message implements IMessage
      * Set 当immediate标志位设置为true时，如果exchange在将消息route到queue(s)时发现对应的queue上没有消费者，那么这条消息不会放入队列中。当与消息routeKey关联的所有queue(一个或多个)都没有消费者时，该消息会通过basic.return方法返还给生产者。
      *
      * @return self
-     */ 
+     */
     public function setImmediate(bool $immediate)
     {
         $this->immediate = $immediate;
@@ -169,22 +169,22 @@ class Message implements IMessage
     }
 
     /**
-     * Get ticket
+     * Get ticket.
      *
      * @return int|null
-     */ 
+     */
     public function getTicket(): ?int
     {
         return $this->ticket;
     }
 
     /**
-     * Set ticket
+     * Set ticket.
      *
-     * @param int|null $ticket  ticket
+     * @param int|null $ticket ticket
      *
      * @return self
-     */ 
+     */
     public function setTicket(?int $ticket)
     {
         $this->ticket = $ticket;
@@ -193,18 +193,21 @@ class Message implements IMessage
     }
 
     /**
-     * 设置主体数据
+     * 设置主体数据.
      *
      * @param mixed $data
+     *
      * @return self
      */
     public function setBodyData($data)
     {
         $this->bodyData = $data;
+
+        return $this;
     }
 
     /**
-     * 获取主体数据
+     * 获取主体数据.
      *
      * @return mixed
      */
@@ -214,13 +217,13 @@ class Message implements IMessage
     }
 
     /**
-     * 获取主体内容
+     * 获取主体内容.
      *
      * @return string
      */
     public function getBody(): string
     {
-        if(null === $this->format)
+        if (null === $this->format)
         {
             return $this->getBodyData();
         }
@@ -228,19 +231,21 @@ class Message implements IMessage
         {
             /** @var \Imi\Util\Format\IFormat $formater */
             $formater = App::getBean($this->format);
+
             return $formater->encode($this->getBodyData());
         }
     }
 
     /**
-     * 设置主体内容
+     * 设置主体内容.
      *
      * @param string $body
+     *
      * @return static
      */
     public function setBody(string $body)
     {
-        if(null === $this->format)
+        if (null === $this->format)
         {
             $this->setBodyData($body);
         }
@@ -251,12 +256,15 @@ class Message implements IMessage
             $data = $formater->decode($body);
             $this->setBodyData($data);
         }
+
+        return $this;
     }
 
     /**
-     * 设置 AMQP 消息
+     * 设置 AMQP 消息.
      *
      * @param \PhpAmqpLib\Message\AMQPMessage $amqpMessage
+     *
      * @return void
      */
     public function setAMQPMessage(AMQPMessage $amqpMessage)
@@ -266,7 +274,7 @@ class Message implements IMessage
     }
 
     /**
-     * 获取 AMQP 消息
+     * 获取 AMQP 消息.
      *
      * @return \PhpAmqpLib\Message\AMQPMessage
      */
@@ -274,5 +282,4 @@ class Message implements IMessage
     {
         return $this->amqpMessage;
     }
-
 }

@@ -1,11 +1,11 @@
 <?php
+
 namespace Imi\AMQP\Queue;
 
-use Imi\AMQP\Annotation\Queue;
-use Imi\AMQP\Contract\IMessage;
-use Imi\AMQP\Base\BasePublisher;
 use Imi\AMQP\Annotation\Exchange;
 use Imi\AMQP\Annotation\Publisher;
+use Imi\AMQP\Annotation\Queue;
+use Imi\AMQP\Base\BasePublisher;
 
 class QueuePublisher extends BasePublisher
 {
@@ -16,21 +16,21 @@ class QueuePublisher extends BasePublisher
         $this->poolName = $poolName;
 
         $list = [];
-        foreach($exchanges as $exchange)
+        foreach ($exchanges as $exchange)
         {
             $list[] = new Exchange($exchange);
         }
         $this->exchanges = $list;
 
         $list = [];
-        foreach($queues as $queue)
+        foreach ($queues as $queue)
         {
             $list[] = new Queue($queue);
         }
         $this->queues = $list;
 
         $list = [];
-        foreach($publishers as $publisher)
+        foreach ($publishers as $publisher)
         {
             $list[] = new Publisher($publisher);
         }
@@ -38,12 +38,11 @@ class QueuePublisher extends BasePublisher
     }
 
     /**
-     * 初始化配置
+     * 初始化配置.
      *
      * @return void
      */
     protected function initConfig()
     {
     }
-
 }

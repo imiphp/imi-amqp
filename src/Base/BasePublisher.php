@@ -1,14 +1,14 @@
 <?php
+
 namespace Imi\AMQP\Base;
 
 use Imi\AMQP\Base\Traits\TAMQP;
 use Imi\AMQP\Contract\IMessage;
 use Imi\AMQP\Contract\IPublisher;
-use Imi\Log\Log;
 use PhpAmqpLib\Message\AMQPMessage;
 
 /**
- * 发布者基类
+ * 发布者基类.
  */
 abstract class BasePublisher implements IPublisher
 {
@@ -27,13 +27,13 @@ abstract class BasePublisher implements IPublisher
     }
 
     /**
-     * 关闭
+     * 关闭.
      *
      * @return void
      */
     public function close()
     {
-        if($this->channel)
+        if ($this->channel)
         {
             $this->channel->close();
             $this->channel = null;
@@ -42,39 +42,41 @@ abstract class BasePublisher implements IPublisher
     }
 
     /**
-     * 准备发布
+     * 准备发布.
      *
-     * @param boolean $force
+     * @param bool $force
+     *
      * @return void
      */
     protected function preparePublish($force = false)
     {
-        if(!$this->connection)
+        if (!$this->connection)
         {
             $this->connection = $this->getConnection();
         }
-        if($force || !$this->connection->isConnected())
+        if ($force || !$this->connection->isConnected())
         {
             $this->connection->reconnect();
             $this->channel = null;
         }
-        if(!$this->channel)
+        if (!$this->channel)
         {
             $this->channel = $this->connection->channel();
             $this->channel->confirm_select();
             $this->declarePublisher();
         }
         $this->ackSuccess = false;
-        $this->channel->set_ack_handler(function() {
+        $this->channel->set_ack_handler(function () {
             $this->ackSuccess = true;
         });
     }
 
     /**
-     * 发布消息
+     * 发布消息.
      *
      * @param \Imi\AMQP\Contract\IMessage $message
-     * @return void
+     *
+     * @return bool
      */
     public function publish(IMessage $message)
     {
@@ -82,20 +84,24 @@ abstract class BasePublisher implements IPublisher
         $amqpMessage = new AMQPMessage($message->getBody(), $message->getProperties());
         $first = true;
         $continue = true;
-        foreach($this->exchanges as $exchange)
+        foreach ($this->exchanges as $exchange)
         {
-            do {
-                try {
+            do
+            {
+                try
+                {
                     $this->channel->basic_publish($amqpMessage, $exchange->name, $message->getRoutingKey(), $message->getMandatory(), $message->getImmediate(), $message->getTicket());
                     $this->channel->wait_for_pending_acks_returns(3);
-                    if(!$this->ackSuccess)
+                    if (!$this->ackSuccess)
                     {
                         break 2;
                     }
                     $first = false;
                     $continue = false;
-                } catch(\Throwable $th) {
-                    if($first)
+                }
+                catch (\Throwable $th)
+                {
+                    if ($first)
                     {
                         $first = false;
                         $this->preparePublish(true);
@@ -106,10 +112,11 @@ abstract class BasePublisher implements IPublisher
                         throw $th;
                     }
                 }
-            } while($continue);
+            } while ($continue);
         }
-        $this->channel->set_ack_handler(function(){});
+        $this->channel->set_ack_handler(function () {
+        });
+
         return $this->ackSuccess;
     }
-
 }

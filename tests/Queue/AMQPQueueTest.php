@@ -1,4 +1,5 @@
 <?php
+
 namespace Imi\AMQP\Test\Queue;
 
 use Imi\App;
@@ -9,8 +10,8 @@ class AMQPQueueTest extends BaseQueueTest
     protected function getDriver(): IQueueDriver
     {
         return App::getBean('AMQPQueueDriver', 'imi-amqp-queue-test', [
-            'poolName'          =>  'rabbit',
-            'redisPoolName'     =>  'redis',
+            'poolName'          => 'rabbit',
+            'redisPoolName'     => 'redis',
         ]);
     }
 }
