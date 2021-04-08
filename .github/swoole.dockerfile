@@ -1,5 +1,5 @@
 ARG SWOOLE_DOCKER_VERSION
-FROM phpswoole/swoole:${SWOOLE_DOCKER_VERSION}
+FROM phpswoole/swoole:${SWOOLE_DOCKER_VERSION}-dev
 
 RUN docker-php-ext-install bcmath mysqli pdo_mysql > /dev/null
 

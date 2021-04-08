@@ -9,7 +9,7 @@
         "php-amqplib/php-amqplib": "^2.11.0"
     },
     "require-dev": {
-        "yurunsoft/imi": "~1.2",
+        "yurunsoft/imi": "dev-dev",
         "yurunsoft/yurun-http": "^4.0.0",
         "yurunsoft/ide-helper": "~1.0",
         "swoole/ide-helper": "^4.6",
