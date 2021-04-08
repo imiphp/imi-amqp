@@ -1,9 +1,12 @@
 <?php
+
 namespace ImiApp\Process;
 
-use Imi\Process\BaseProcess;
+use Imi\AMQP\Contract\IConsumer;
 use Imi\Aop\Annotation\Inject;
+use Imi\App;
 use Imi\Process\Annotation\Process;
+use Imi\Process\BaseProcess;
 
 /**
  * @Process(name="TestProcess")
@@ -26,16 +29,27 @@ class TestProcess extends BaseProcess
 
     public function run(\Swoole\Process $process)
     {
-        go(function(){
-            do {
-                $this->testConsumer->run();
-            } while(true);
-        });
-        go(function(){
-            do {
-                $this->testConsumer2->run();
-            } while(true);
-        });
+        $this->runConsumer($this->testConsumer);
+        $this->runConsumer($this->testConsumer2);
+        \Swoole\Coroutine::yield();
     }
 
+    private function runConsumer(IConsumer $consumer): void
+    {
+        go(function () use ($consumer) {
+            /* @var \Imi\AMQP\Contract\IConsumer $instance */
+            try
+            {
+                $consumer->run();
+            }
+            catch (\Throwable $th)
+            {
+                /** @var \Imi\Log\ErrorLog $errorLog */
+                $errorLog = App::getBean('ErrorLog');
+                $errorLog->onException($th);
+                sleep(3);
+                $this->runConsumer($consumer);
+            }
+        });
+    }
 }

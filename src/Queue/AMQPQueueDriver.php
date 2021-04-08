@@ -1,27 +1,26 @@
 <?php
+
 namespace Imi\AMQP\Queue;
 
-use Imi\Bean\BeanFactory;
-use Imi\Redis\RedisManager;
 use Imi\Bean\Annotation\Bean;
-use Imi\Queue\Enum\QueueType;
+use Imi\Bean\BeanFactory;
 use Imi\Queue\Contract\IMessage;
-use Imi\Queue\Model\QueueStatus;
 use Imi\Queue\Driver\IQueueDriver;
-use Imi\AMQP\Queue\JsonAMQPMessage;
-use Imi\AMQP\Queue\QueueAMQPMessage;
-use Imi\Util\Traits\TDataToProperty;
+use Imi\Queue\Enum\QueueType;
 use Imi\Queue\Exception\QueueException;
+use Imi\Queue\Model\QueueStatus;
+use Imi\Redis\RedisManager;
+use Imi\Util\Traits\TDataToProperty;
 
 /**
- * AMQP 队列驱动
- * 
+ * AMQP 队列驱动.
+ *
  * @Bean("AMQPQueueDriver")
  */
 class AMQPQueueDriver implements IQueueDriver
 {
     use TDataToProperty{
-		__construct as private traitConstruct;
+        __construct as private traitConstruct;
     }
 
     const ROUTING_NORMAL = 'normal';
@@ -33,150 +32,153 @@ class AMQPQueueDriver implements IQueueDriver
     const ROUTING_FAIL = 'fail';
 
     /**
-     * AMQP 连接池名称
+     * AMQP 连接池名称.
+     *
      * @var string
      */
     protected $poolName;
 
     /**
-     * 队列名称
+     * 队列名称.
      *
      * @var string
      */
     protected $name;
 
     /**
-     * 支持消息删除功能
-     * 
+     * 支持消息删除功能.
+     *
      * 依赖 Redis
      *
-     * @var boolean
+     * @var bool
      */
     protected $supportDelete = true;
 
     /**
-     * 支持消费超时队列功能
-     * 
+     * 支持消费超时队列功能.
+     *
      * 依赖 Redis，并且自动增加一个队列
      *
-     * @var boolean
+     * @var bool
      */
     protected $supportTimeout = true;
 
     /**
-     * 支持消费失败队列功能
-     * 
+     * 支持消费失败队列功能.
+     *
      * 自动增加一个队列
      *
-     * @var boolean
+     * @var bool
      */
     protected $supportFail = true;
 
     /**
-     * Redis 连接池名称
+     * Redis 连接池名称.
+     *
      * @var string
      */
     protected $redisPoolName;
 
     /**
      * Redis 键名前缀
+     *
      * @var string
      */
     protected $redisPrefix = '';
 
     /**
-     * 循环尝试 pop 的时间间隔，单位：秒
-     * 
+     * 循环尝试 pop 的时间间隔，单位：秒.
+     *
      * @var float
      */
     protected $timespan = 0.03;
 
     /**
-     * 本地缓存的队列长度
+     * 本地缓存的队列长度.
      *
-     * @var integer
+     * @var int
      */
     protected $queueLength = 16;
 
     /**
-     * 消息类名
+     * 消息类名.
      *
      * @var string
      */
     protected $message = JsonAMQPMessage::class;
 
     /**
-     * 发布者
+     * 发布者.
      *
-     * @var \Imi\AMQP\Queue\QueuePublisher
+     * @var \Imi\AMQP\Queue\QueuePublisher|null
      */
     private $publisher;
 
     /**
-     * 延迟发布者
+     * 延迟发布者.
      *
-     * @var \Imi\AMQP\Queue\QueuePublisher
+     * @var \Imi\AMQP\Queue\QueuePublisher|null
      */
     private $delayPublisher;
 
     /**
-     * 消费者
+     * 消费者.
      *
-     * @var \Imi\AMQP\Queue\QueueConsumer
+     * @var \Imi\AMQP\Queue\QueueConsumer|null
      */
     private $consumer;
 
     /**
-     * 超时队列发布者
+     * 超时队列发布者.
      *
-     * @var \Imi\AMQP\Queue\QueuePublisher
+     * @var \Imi\AMQP\Queue\QueuePublisher|null
      */
     private $timeoutPublisher;
 
     /**
-     * 超时队列消费者
+     * 超时队列消费者.
      *
-     * @var \Imi\AMQP\Queue\QueueConsumer
+     * @var \Imi\AMQP\Queue\QueueConsumer|null
      */
     private $timeoutConsumer;
 
     /**
-     * 失败队列发布者
+     * 失败队列发布者.
      *
-     * @var \Imi\AMQP\Queue\QueuePublisher
+     * @var \Imi\AMQP\Queue\QueuePublisher|null
      */
     private $failPublisher;
 
     /**
-     * 失败队列消费者
+     * 失败队列消费者.
      *
-     * @var \Imi\AMQP\Queue\QueueConsumer
+     * @var \Imi\AMQP\Queue\QueueConsumer|null
      */
     private $failConsumer;
 
     /**
-     * AMQP 的队列名称
+     * AMQP 的队列名称.
      *
      * @var string
      */
     private $queueName;
 
     /**
-     * AMQP 的延迟队列名称
+     * AMQP 的延迟队列名称.
      *
      * @var string
      */
     private $delayQueueName;
 
     /**
-     * AMQP 的失败队列名称
+     * AMQP 的失败队列名称.
      *
      * @var string
      */
     private $failQueueName;
 
     /**
-     * AMQP 的超时队列名称
+     * AMQP 的超时队列名称.
      *
      * @var string
      */
@@ -192,105 +194,105 @@ class AMQPQueueDriver implements IQueueDriver
         $this->delayQueueName = $queueDelayName = 'imi-' . $name . '-delay';
         $exchanges = [
             [
-                'name'  =>  $exchangeName,
+                'name'  => $exchangeName,
             ],
         ];
         $queues = [
             [
-                'name'          =>  $queueName,
-                'routingKey'    =>  self::ROUTING_NORMAL,
+                'name'          => $queueName,
+                'routingKey'    => self::ROUTING_NORMAL,
             ],
         ];
         $publishers = [
             [
-                'exchange'      =>  $exchangeName,
-                'routingKey'    =>  self::ROUTING_NORMAL,
-                'queue'         =>  $queueName,
+                'exchange'      => $exchangeName,
+                'routingKey'    => self::ROUTING_NORMAL,
+                'queue'         => $queueName,
             ],
         ];
         $consumers = [
             [
-                'exchange'      =>  $exchangeName,
-                'queue'         =>  $queueName,
-                'routingKey'    =>  self::ROUTING_NORMAL,
-                'message'       =>  $this->message,
+                'exchange'      => $exchangeName,
+                'queue'         => $queueName,
+                'routingKey'    => self::ROUTING_NORMAL,
+                'message'       => $this->message,
             ],
         ];
         $delayQueues = [
             [
-                'name'          =>  $queueDelayName,
-                'arguments'     =>  [
-                    'x-dead-letter-exchange'    =>  $exchangeName,
-                    'x-dead-letter-routing-key' =>  self::ROUTING_NORMAL,
+                'name'          => $queueDelayName,
+                'arguments'     => [
+                    'x-dead-letter-exchange'    => $exchangeName,
+                    'x-dead-letter-routing-key' => self::ROUTING_NORMAL,
                 ],
-                'routingKey'    =>  self::ROUTING_DELAY,
+                'routingKey'    => self::ROUTING_DELAY,
             ],
         ];
         $delayPublishers = [
             [
-                'exchange'  =>  $exchangeName,
-                'routingKey'=>  self::ROUTING_DELAY,
-                'queue'     =>  $queueDelayName,
+                'exchange'   => $exchangeName,
+                'routingKey' => self::ROUTING_DELAY,
+                'queue'      => $queueDelayName,
             ],
         ];
         $this->publisher = BeanFactory::newInstance(QueuePublisher::class, $exchanges, $queues, $publishers, $this->poolName);
         $this->delayPublisher = BeanFactory::newInstance(QueuePublisher::class, $exchanges, $delayQueues, $delayPublishers, $this->poolName);
         $this->consumer = BeanFactory::newInstance(QueueConsumer::class, $this->queueLength, $exchanges, $queues, $consumers, $this->poolName);
-        if($this->supportTimeout)
+        if ($this->supportTimeout)
         {
             $this->timeoutQueueName = $timeoutQueueName = ('imi-' . $name . '-timeout');
             $this->timeoutPublisher = BeanFactory::newInstance(QueuePublisher::class, $exchanges, [
                 [
-                    'name'          =>  $timeoutQueueName,
-                    'routingKey'    =>  self::ROUTING_TIMEOUT,
+                    'name'          => $timeoutQueueName,
+                    'routingKey'    => self::ROUTING_TIMEOUT,
                 ],
             ], [
                 [
-                    'exchange'      =>  $exchangeName,
-                    'routingKey'    =>  self::ROUTING_TIMEOUT,
-                    'queue'         =>  $timeoutQueueName,
+                    'exchange'      => $exchangeName,
+                    'routingKey'    => self::ROUTING_TIMEOUT,
+                    'queue'         => $timeoutQueueName,
                 ],
             ], $this->poolName);
             $this->timeoutConsumer = BeanFactory::newInstance(QueueConsumer::class, 1, $exchanges, [
                 [
-                    'name'          =>  $timeoutQueueName,
-                    'routingKey'    =>  self::ROUTING_TIMEOUT,
+                    'name'          => $timeoutQueueName,
+                    'routingKey'    => self::ROUTING_TIMEOUT,
                 ],
             ], [
                 [
-                    'exchange'      =>  $exchangeName,
-                    'routingKey'    =>  self::ROUTING_TIMEOUT,
-                    'queue'         =>  $timeoutQueueName,
-                    'message'       =>  $this->message,
+                    'exchange'      => $exchangeName,
+                    'routingKey'    => self::ROUTING_TIMEOUT,
+                    'queue'         => $timeoutQueueName,
+                    'message'       => $this->message,
                 ],
             ], $this->poolName);
         }
-        if($this->supportFail)
+        if ($this->supportFail)
         {
             $this->failQueueName = $failQueueName = ('imi-' . $name . '-fail');
             $this->failPublisher = BeanFactory::newInstance(QueuePublisher::class, $exchanges, [
                 [
-                    'name'          =>  $failQueueName,
-                    'routingKey'    =>  self::ROUTING_FAIL,
+                    'name'          => $failQueueName,
+                    'routingKey'    => self::ROUTING_FAIL,
                 ],
             ], [
                 [
-                    'exchange'      =>  $exchangeName,
-                    'routingKey'    =>  self::ROUTING_FAIL,
-                    'queue'         =>  $failQueueName,
+                    'exchange'      => $exchangeName,
+                    'routingKey'    => self::ROUTING_FAIL,
+                    'queue'         => $failQueueName,
                 ],
             ], $this->poolName);
             $this->failConsumer = BeanFactory::newInstance(QueueConsumer::class, 1, $exchanges, [
                 [
-                    'name'          =>  $failQueueName,
-                    'routingKey'    =>  self::ROUTING_FAIL,
+                    'name'          => $failQueueName,
+                    'routingKey'    => self::ROUTING_FAIL,
                 ],
             ], [
                 [
-                    'exchange'      =>  $exchangeName,
-                    'routingKey'    =>  self::ROUTING_FAIL,
-                    'queue'         =>  $failQueueName,
-                    'message'       =>  $this->message,
+                    'exchange'      => $exchangeName,
+                    'routingKey'    => self::ROUTING_FAIL,
+                    'queue'         => $failQueueName,
+                    'message'       => $this->message,
                 ],
             ], $this->poolName);
         }
@@ -300,19 +302,19 @@ class AMQPQueueDriver implements IQueueDriver
     {
         $this->publisher->close();
         $this->consumer->close();
-        if($this->failPublisher)
+        if ($this->failPublisher)
         {
             $this->failPublisher->close();
         }
-        if($this->failConsumer)
+        if ($this->failConsumer)
         {
             $this->failConsumer->close();
         }
-        if($this->timeoutPublisher)
+        if ($this->timeoutPublisher)
         {
             $this->timeoutPublisher->close();
         }
-        if($this->timeoutConsumer)
+        if ($this->timeoutConsumer)
         {
             $this->timeoutConsumer->close();
         }
@@ -320,7 +322,7 @@ class AMQPQueueDriver implements IQueueDriver
     }
 
     /**
-     * 获取队列名称
+     * 获取队列名称.
      *
      * @return string
      */
@@ -330,24 +332,25 @@ class AMQPQueueDriver implements IQueueDriver
     }
 
     /**
-     * 推送消息到队列，返回消息ID
+     * 推送消息到队列，返回消息ID.
      *
      * @param \Imi\Queue\Contract\IMessage $message
-     * @param float $delay
-     * @param array $options
+     * @param float                        $delay
+     * @param array                        $options
+     *
      * @return string
      */
     public function push(IMessage $message, float $delay = 0, array $options = []): string
     {
         $redis = RedisManager::getInstance($this->redisPoolName);
         $message->setMessageId($messageId = $redis->incr($this->getRedisMessageIdKey()));
-        $amqpMessage = new \Imi\AMQP\Message;
+        $amqpMessage = new \Imi\AMQP\Message();
         $amqpMessage->setBody(json_encode($message->toArray()));
-        if($delay > 0)
+        if ($delay > 0)
         {
             $amqpMessage->setRoutingKey(self::ROUTING_DELAY);
             $amqpMessage->setProperties([
-                'expiration'    =>  $delay * 1000,
+                'expiration'    => $delay * 1000,
             ]);
             $this->delayPublisher->publish($amqpMessage);
         }
@@ -356,27 +359,30 @@ class AMQPQueueDriver implements IQueueDriver
             $amqpMessage->setRoutingKey(self::ROUTING_NORMAL);
             $this->publisher->publish($amqpMessage);
         }
+
         return $messageId;
     }
 
     /**
-     * 从队列弹出一个消息
-     * 
+     * 从队列弹出一个消息.
+     *
      * @param float $timeout 超时时间，单位：秒。值是-1时立即返回结果
+     *
      * @return \Imi\Queue\Contract\IMessage|null
      */
     public function pop(float $timeout = -1): ?IMessage
     {
         $time = $useTime = 0;
-        do {
-            if($timeout > 0)
+        do
+        {
+            if ($timeout > 0)
             {
-                if($time)
+                if ($time)
                 {
                     $leftTime = $timeout - $useTime;
-                    if($leftTime > $this->timespan)
+                    if ($leftTime > $this->timespan)
                     {
-                        usleep($this->timespan * 1000000);
+                        usleep((int) ($this->timespan * 1000000));
                     }
                 }
                 else
@@ -384,24 +390,24 @@ class AMQPQueueDriver implements IQueueDriver
                     $time = microtime(true);
                 }
             }
-            if($this->supportTimeout)
+            if ($this->supportTimeout)
             {
                 $this->parseTimeoutMessages();
             }
             $result = $this->consumer->pop($this->timespan);
-            if($result)
+            if ($result)
             {
-                $message = new QueueAMQPMessage;
+                $message = new QueueAMQPMessage();
                 $message->setAmqpMessage($result);
                 // 检查是否被删除
-                if($this->messageIsDeleted($message->getMessageId()))
+                if ($this->messageIsDeleted($message->getMessageId()))
                 {
                     continue;
                 }
                 // 加入工作队列
                 $redis = RedisManager::getInstance($this->redisPoolName);
                 $workingTimeout = $message->getWorkingTimeout();
-                if($workingTimeout > 0)
+                if ($workingTimeout > 0)
                 {
                     $score = microtime(true) + $workingTimeout;
                 }
@@ -410,52 +416,54 @@ class AMQPQueueDriver implements IQueueDriver
                     $score = -1;
                 }
                 $redis->zAdd($this->getRedisQueueKey(QueueType::WORKING), $score, $message->toArray());
+
                 return $message;
             }
-            else if(false === $result)
-            {
-                throw new QueueException('Queue pop failed');
-            }
-            if($timeout < 0)
+            elseif ($timeout < 0)
             {
                 return null;
             }
-        } while(($useTime = (microtime(true) - $time)) < $timeout);
+        } while (($useTime = (microtime(true) - $time)) < $timeout);
+
         return null;
     }
 
     /**
-     * 删除一个消息
+     * 删除一个消息.
      *
      * @param \Imi\Queue\Contract\IMessage $message
+     *
      * @return bool
      */
     public function delete(IMessage $message): bool
     {
         $redis = RedisManager::getInstance($this->redisPoolName);
+
         return $redis->sAdd($this->getRedisQueueKey('deleted'), '') > 0;
     }
 
     /**
-     * 清空队列
+     * 清空队列.
      *
      * @param int|int[]|null $queueType 清空哪个队列，默认为全部
+     *
      * @return void
      */
     public function clear($queueType = null)
     {
-        if(null === $queueType)
+        if (null === $queueType)
         {
             $queueTypes = QueueType::getValues();
         }
         else
         {
-            $queueTypes = (array)$queueType;
+            $queueTypes = (array) $queueType;
         }
-        foreach($queueTypes as $queueType)
+        foreach ($queueTypes as $queueType)
         {
-            try {
-                switch($queueType)
+            try
+            {
+                switch ($queueType)
                 {
                     case QueueType::READY:
                         $this->consumer->getAMQPChannel()->queue_purge($this->queueName);
@@ -474,8 +482,9 @@ class AMQPQueueDriver implements IQueueDriver
                         $this->delayPublisher->getAMQPChannel()->queue_purge($this->delayQueueName);
                         break;
                 }
-            } catch(\PhpAmqpLib\Exception\AMQPProtocolChannelException $e) {
-
+            }
+            catch (\PhpAmqpLib\Exception\AMQPProtocolChannelException $e)
+            {
             }
         }
     }
@@ -484,6 +493,7 @@ class AMQPQueueDriver implements IQueueDriver
      * 将消息标记为成功
      *
      * @param \Imi\AMQP\Queue\QueueAMQPMessage $message
+     *
      * @return void
      */
     public function success(IMessage $message)
@@ -492,20 +502,22 @@ class AMQPQueueDriver implements IQueueDriver
     }
 
     /**
-     * 将消息标记为失败
+     * 将消息标记为失败.
      *
      * @param \Imi\AMQP\Queue\QueueAMQPMessage $message
-     * @param bool $requeue
+     * @param bool                             $requeue
+     *
      * @return void
      */
     public function fail(IMessage $message, bool $requeue = false)
     {
-        if($requeue)
+        if ($requeue)
         {
             $this->consumer->getAMQPChannel()->basic_nack($message->getAmqpMessage()->getAMQPMessage()->getDeliveryTag(), false, $requeue);
+
             return;
         }
-        if($this->supportFail)
+        if ($this->supportFail)
         {
             $amqpMessage = $message->getAmqpMessage();
             $amqpMessage->setRoutingKey(self::ROUTING_FAIL);
@@ -529,14 +541,17 @@ class AMQPQueueDriver implements IQueueDriver
         $redis = RedisManager::getInstance($this->redisPoolName);
 
         // ready
-        try {
+        try
+        {
             $result = $this->consumer->getAMQPChannel()->queue_declare($this->queueName, true, false, false, false);
-            if(!$result)
+            if (!$result)
             {
                 throw new \RuntimeException(sprintf('Get queue:%s info failed', $this->queueName));
             }
             [, $ready, $unacked] = $result;
-        } catch(\PhpAmqpLib\Exception\AMQPProtocolChannelException $e) {
+        }
+        catch (\PhpAmqpLib\Exception\AMQPProtocolChannelException $e)
+        {
             $ready = $unacked = 0;
         }
         $status['ready'] = $ready + $unacked;
@@ -546,32 +561,38 @@ class AMQPQueueDriver implements IQueueDriver
 
         // fail
         $fail = $unacked;
-        try {
-            if($this->supportFail)
+        try
+        {
+            if ($this->supportFail)
             {
                 $result = $this->consumer->getAMQPChannel()->queue_declare($this->failQueueName, true, false, false, false);
-                if(!$result)
+                if (!$result)
                 {
                     throw new \RuntimeException(sprintf('Get queue:%s info failed', $this->failQueueName));
                 }
                 [, $failReady, ] = $result;
                 $fail += $failReady;
             }
-        } catch(\PhpAmqpLib\Exception\AMQPProtocolChannelException $e) {
+        }
+        catch (\PhpAmqpLib\Exception\AMQPProtocolChannelException $e)
+        {
         }
         $status['fail'] = $fail;
         // timeout
-        if($this->supportTimeout)
+        if ($this->supportTimeout)
         {
-            try {
+            try
+            {
                 $result = $this->consumer->getAMQPChannel()->queue_declare($this->timeoutQueueName, true, false, false, false);
-                if(!$result)
+                if (!$result)
                 {
                     throw new \RuntimeException(sprintf('Get queue:%s info failed', $this->timeoutQueueName));
                 }
                 [, $timeoutReady, ] = $result;
                 $status['timeout'] = $timeoutReady;
-            } catch(\PhpAmqpLib\Exception\AMQPProtocolChannelException $e) {
+            }
+            catch (\PhpAmqpLib\Exception\AMQPProtocolChannelException $e)
+            {
                 $status['timeout'] = 0;
             }
         }
@@ -581,14 +602,17 @@ class AMQPQueueDriver implements IQueueDriver
         }
 
         // delay
-        try {
+        try
+        {
             $result = $this->consumer->getAMQPChannel()->queue_declare($this->delayQueueName, true, false, false, false);
-            if(!$result)
+            if (!$result)
             {
                 throw new \RuntimeException(sprintf('Get queue:%s info failed', $this->delayQueueName));
             }
             [, $delayReady, ] = $result;
-        } catch(\PhpAmqpLib\Exception\AMQPProtocolChannelException $e) {
+        }
+        catch (\PhpAmqpLib\Exception\AMQPProtocolChannelException $e)
+        {
             $delayReady = 0;
         }
         $status['delay'] = $delayReady;
@@ -597,18 +621,18 @@ class AMQPQueueDriver implements IQueueDriver
     }
 
     /**
-     * 将失败消息恢复到队列
-     * 
+     * 将失败消息恢复到队列.
+     *
      * 返回恢复数量
      *
-     * @return integer
+     * @return int
      */
     public function restoreFailMessages(): int
     {
         $count = 0;
-        while($message = $this->failConsumer->pop(0.001))
+        while ($message = $this->failConsumer->pop(0.001))
         {
-            $amqpMessage = new \Imi\AMQP\Message;
+            $amqpMessage = new \Imi\AMQP\Message();
             $amqpMessage->setBody($message->getBody());
             $amqpMessage->setRoutingKey(self::ROUTING_NORMAL);
             $this->publisher->publish($amqpMessage);
@@ -616,22 +640,23 @@ class AMQPQueueDriver implements IQueueDriver
             ++$count;
         }
         $this->failConsumer->reopen();
+
         return $count;
     }
 
     /**
-     * 将超时消息恢复到队列
-     * 
+     * 将超时消息恢复到队列.
+     *
      * 返回恢复数量
      *
-     * @return integer
+     * @return int
      */
     public function restoreTimeoutMessages(): int
     {
         $count = 0;
-        while($message = $this->timeoutConsumer->pop(0.001))
+        while ($message = $this->timeoutConsumer->pop(0.001))
         {
-            $amqpMessage = new \Imi\AMQP\Message;
+            $amqpMessage = new \Imi\AMQP\Message();
             $amqpMessage->setBody($message->getBody());
             $amqpMessage->setRoutingKey(self::ROUTING_NORMAL);
             $this->publisher->publish($amqpMessage);
@@ -639,11 +664,12 @@ class AMQPQueueDriver implements IQueueDriver
             ++$count;
         }
         $this->timeoutConsumer->reopen();
+
         return $count;
     }
 
     /**
-     * 获取消息 ID 的键
+     * 获取消息 ID 的键.
      *
      * @return string
      */
@@ -653,22 +679,24 @@ class AMQPQueueDriver implements IQueueDriver
     }
 
     /**
-     * 获取队列的键
+     * 获取队列的键.
      *
-     * @param string $queueType
+     * @param int|string $queueType
+     *
      * @return string
      */
-    public function getRedisQueueKey(string $queueType): string
+    public function getRedisQueueKey($queueType): string
     {
         return $this->redisPrefix . $this->name . ':' . strtolower(QueueType::getName($queueType) ?? $queueType);
     }
 
     /**
-     * 将处理超时的消息加入到超时队列
-     * 
+     * 将处理超时的消息加入到超时队列.
+     *
      * 返回消息数量
      *
-     * @param integer $count
+     * @param int $count
+     *
      * @return void
      */
     protected function parseTimeoutMessages(int $count = 100)
@@ -691,9 +719,9 @@ LUA
             $count,
         ], 1);
 
-        if(false === $result)
+        if (false === $result)
         {
-            if('' == ($error = $redis->getLastError()))
+            if ('' == ($error = $redis->getLastError()))
             {
                 throw new QueueException('Queue parseTimeoutMessages failed');
             }
@@ -703,9 +731,9 @@ LUA
             }
         }
 
-        foreach($result ?: [] as $message)
+        foreach ($result ?: [] as $message)
         {
-            $amqpMessage = new \Imi\AMQP\Message;
+            $amqpMessage = new \Imi\AMQP\Message();
             $amqpMessage->setBody($message);
             $amqpMessage->setRoutingKey(self::ROUTING_TIMEOUT);
             $this->timeoutPublisher->publish($amqpMessage);
@@ -713,15 +741,17 @@ LUA
     }
 
     /**
-     * 消息是否被删除
+     * 消息是否被删除.
      *
      * @param string $messageId
-     * @param bool $delete
+     * @param bool   $delete
+     *
      * @return bool
      */
     protected function messageIsDeleted(string $messageId, bool $delete = true): bool
     {
         $redis = RedisManager::getInstance($this->redisPoolName);
+
         return $redis->evalEx(<<<LUA
 local deletedKey = KEYS[1];
 local messageId = ARGV[1];
@@ -739,5 +769,4 @@ LUA
             $delete,
         ], 1) > 0;
     }
-
 }

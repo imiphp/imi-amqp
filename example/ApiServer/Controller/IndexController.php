@@ -1,14 +1,15 @@
 <?php
+
 namespace ImiApp\ApiServer\Controller;
 
-use Imi\Redis\Redis;
 use Imi\Aop\Annotation\Inject;
-use ImiApp\AMQP\Test\TestMessage;
 use Imi\Controller\HttpController;
-use ImiApp\AMQP\Test2\TestMessage2;
-use Imi\Server\Route\Annotation\Route;
+use Imi\Redis\Redis;
 use Imi\Server\Route\Annotation\Action;
 use Imi\Server\Route\Annotation\Controller;
+use Imi\Server\Route\Annotation\Route;
+use ImiApp\AMQP\Test\TestMessage;
+use ImiApp\AMQP\Test2\TestMessage2;
 
 /**
  * @Controller("/")
@@ -33,7 +34,7 @@ class IndexController extends HttpController
      * @Action
      * @Route("/")
      *
-     * @return void
+     * @return mixed
      */
     public function index()
     {
@@ -43,40 +44,42 @@ class IndexController extends HttpController
     /**
      * @Action
      *
-     * @param integer $memberId
-     * @return void
+     * @param int $memberId
+     *
+     * @return mixed
      */
     public function publish($memberId = 19260817)
     {
-        $message = new TestMessage;
+        $message = new TestMessage();
         $message->setMemberId($memberId);
         $r1 = $this->testPublisher->publish($message);
-        
-        $message2 = new TestMessage2;
+
+        $message2 = new TestMessage2();
         $message2->setMemberId($memberId);
         $message2->setContent('memberId:' . $memberId);
         $r2 = $this->testPublisher2->publish($message2);
 
         return [
-            'r1'    =>  $r1,
-            'r2'    =>  $r2,
+            'r1'    => $r1,
+            'r2'    => $r2,
         ];
     }
 
     /**
      * @Action
      *
-     * @param integer $memberId
-     * @return void
+     * @param int $memberId
+     *
+     * @return mixed
      */
     public function consume($memberId)
     {
         $r1 = Redis::get('imi-amqp:consume:1:' . $memberId);
         $r2 = Redis::get('imi-amqp:consume:2:' . $memberId);
+
         return [
-            'r1'    =>  $r1,
-            'r2'    =>  $r2,
+            'r1'    => $r1,
+            'r2'    => $r2,
         ];
     }
-
 }

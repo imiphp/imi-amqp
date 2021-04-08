@@ -305,7 +305,7 @@ class TestConsumer extends BaseConsumer
      * 消费任务
      *
      * @param \ImiApp\AMQP\Test\TestMessage $message
-     * @return void
+     * @return mixed
      */
     protected function consume(IMessage $message)
     {

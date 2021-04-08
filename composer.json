@@ -12,7 +12,9 @@
         "yurunsoft/imi": "dev-dev",
         "yurunsoft/yurun-http": "^4.0.0",
         "yurunsoft/ide-helper": "~1.0",
-        "phpunit/phpunit": ">=7"
+        "phpunit/phpunit": ">=7",
+        "friendsofphp/php-cs-fixer": "2.18.3",
+        "phpstan/phpstan": "0.12.82"
     },
     "autoload": {
         "psr-4" : {

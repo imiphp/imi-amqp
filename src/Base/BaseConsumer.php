@@ -1,8 +1,9 @@
 <?php
+
 namespace Imi\AMQP\Base;
 
-use Imi\AMQP\Contract\IConsumer;
 use Imi\AMQP\Base\Traits\TAMQP;
+use Imi\AMQP\Contract\IConsumer;
 use Imi\AMQP\Contract\IMessage;
 use Imi\AMQP\Enum\ConsumerResult;
 use Imi\App;
@@ -10,7 +11,7 @@ use Imi\Log\Log;
 use function Yurun\Swoole\Coroutine\goWait;
 
 /**
- * 消费者基类
+ * 消费者基类.
  */
 abstract class BaseConsumer implements IConsumer
 {
@@ -22,35 +23,37 @@ abstract class BaseConsumer implements IConsumer
     }
 
     /**
-     * 运行消费循环
+     * 运行消费循环.
      *
-     * @param string $data
      * @return void
      */
     public function run()
     {
-        try {
+        try
+        {
             $this->connection = $this->getConnection();
             $this->channel = $this->connection->channel();
             $this->declareConsumer();
             $this->bindConsumer();
-            while($this->channel && $this->channel->is_consuming())
+            while ($this->channel && $this->channel->is_consuming())
             {
                 $this->channel->wait();
             }
-        } catch(\PhpAmqpLib\Exception\AMQPProtocolChannelException $e) {
+        }
+        catch (\PhpAmqpLib\Exception\AMQPProtocolChannelException $e)
+        {
             Log::warning('AMQPProtocolChannelException: ' . $e->getMessage());
         }
     }
 
     /**
-     * 停止消费循环
+     * 停止消费循环.
      *
      * @return void
      */
     public function stop()
     {
-        if($this->channel)
+        if ($this->channel)
         {
             $this->channel->close();
             $this->channel = null;
@@ -58,7 +61,7 @@ abstract class BaseConsumer implements IConsumer
     }
 
     /**
-     * 关闭
+     * 关闭.
      *
      * @return void
      */
@@ -69,26 +72,27 @@ abstract class BaseConsumer implements IConsumer
     }
 
     /**
-     * 绑定消费者
+     * 绑定消费者.
      *
      * @return void
      */
     protected function bindConsumer()
     {
-        foreach($this->consumers as $consumer)
+        foreach ($this->consumers as $consumer)
         {
-            foreach((array)$consumer->queue as $queueName)
+            foreach ((array) $consumer->queue as $queueName)
             {
                 $messageClass = $consumer->message ?? \Imi\AMQP\Message::class;
-                $this->channel->basic_consume($queueName, $consumer->tag, false, false, false, false, function(\PhpAmqpLib\Message\AMQPMessage $message) use($messageClass){
-                    try {
+                $this->channel->basic_consume($queueName, $consumer->tag, false, false, false, false, function (\PhpAmqpLib\Message\AMQPMessage $message) use ($messageClass) {
+                    try
+                    {
                         /** @var \Imi\AMQP\Message $messageInstance */
-                        $messageInstance = new $messageClass;
+                        $messageInstance = new $messageClass();
                         $messageInstance->setAMQPMessage($message);
-                        $result = goWait(function() use($messageInstance){
+                        $result = goWait(function () use ($messageInstance) {
                             return $this->consume($messageInstance);
                         });
-                        switch($result)
+                        switch ($result)
                         {
                             case ConsumerResult::ACK:
                                 $this->channel->basic_ack($message->getDeliveryTag());
@@ -106,7 +110,9 @@ abstract class BaseConsumer implements IConsumer
                                 $this->channel->basic_reject($message->getDeliveryTag(), true);
                                 break;
                         }
-                    } catch(\Throwable $th) {
+                    }
+                    catch (\Throwable $th)
+                    {
                         App::getBean('ErrorLog')->onException($th);
                     }
                 });
@@ -118,8 +124,8 @@ abstract class BaseConsumer implements IConsumer
      * 消费任务
      *
      * @param \Imi\AMQP\Contract\IMessage $message
-     * @return void
+     *
+     * @return mixed
      */
-    protected abstract function consume(IMessage $message);
-
+    abstract protected function consume(IMessage $message);
 }

@@ -1,11 +1,13 @@
 <?php
+
 namespace Imi\AMQP\Annotation;
 
 use Imi\Bean\Annotation\Base;
 use Imi\Bean\Annotation\Parser;
 
 /**
- * 交换机
+ * 交换机.
+ *
  * @Annotation
  * @Target({"CLASS"})
  * @Parser("Imi\Bean\Parser\NullParser")
@@ -13,15 +15,15 @@ use Imi\Bean\Annotation\Parser;
 class Exchange extends Base
 {
     /**
-     * 交换机名称
+     * 交换机名称.
      *
      * @var string
      */
     public $name;
 
     /**
-     * 类型
-     * 
+     * 类型.
+     *
      * \PhpAmqpLib\Exchange\AMQPExchangeType::常量
      *
      * @var string
@@ -29,53 +31,52 @@ class Exchange extends Base
     public $type = \PhpAmqpLib\Exchange\AMQPExchangeType::DIRECT;
 
     /**
-     * 被动模式
+     * 被动模式.
      *
-     * @var boolean
+     * @var bool
      */
     public $passive = false;
 
     /**
-     * 消息队列持久化
+     * 消息队列持久化.
      *
-     * @var boolean
+     * @var bool
      */
     public $durable = true;
 
     /**
-     * 自动删除
+     * 自动删除.
      *
-     * @var boolean
+     * @var bool
      */
     public $autoDelete = false;
 
     /**
-     * 设置是否为rabbitmq内部使用, true表示是内部使用, false表示不是内部使用
+     * 设置是否为rabbitmq内部使用, true表示是内部使用, false表示不是内部使用.
      *
-     * @var boolean
+     * @var bool
      */
     public $internal = false;
 
     /**
      * 是否非阻塞
-     * true表示是。阻塞：表示创建交换器的请求发送后，阻塞等待RMQ Server返回信息。非阻塞：不会阻塞等待RMQ 
+     * true表示是。阻塞：表示创建交换器的请求发送后，阻塞等待RMQ Server返回信息。非阻塞：不会阻塞等待RMQ.
      *
-     * @var boolean
+     * @var bool
      */
     public $nowait = false;
 
     /**
-     * 参数
+     * 参数.
      *
      * @var array
      */
     public $arguments = [];
 
     /**
-     * ticket
+     * ticket.
      *
      * @var int|null
      */
     public $ticket = null;
-
 }

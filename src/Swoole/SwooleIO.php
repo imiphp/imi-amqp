@@ -1,10 +1,11 @@
 <?php
+
 namespace Imi\AMQP\Swoole;
 
-use PhpAmqpLib\Wire\IO\AbstractIO;
+use PhpAmqpLib\Exception\AMQPConnectionClosedException;
 use PhpAmqpLib\Exception\AMQPRuntimeException;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
-use PhpAmqpLib\Exception\AMQPConnectionClosedException;
+use PhpAmqpLib\Wire\IO\AbstractIO;
 
 /**
  * @source https://github.com/swoole/php-amqplib/blob/master/PhpAmqpLib/Wire/IO/SwooleIO.php
@@ -13,10 +14,14 @@ class SwooleIO extends AbstractIO
 {
     const READ_BUFFER_WAIT_INTERVAL = 100000;
 
-    /** @var float */
+    /**
+     *  @var float
+     */
     protected $read_write_timeout;
 
-    /** @var resource */
+    /**
+     * @var resource|null
+     */
     protected $context;
 
     /**
@@ -29,11 +34,25 @@ class SwooleIO extends AbstractIO
      */
     protected $ssl = false;
 
-    /** @var Swoole\Coroutine\Client */
+    /**
+     * @var \Swoole\Coroutine\Client|null
+     */
     private $sock;
 
+    /**
+     * @var string
+     */
     private $buffer = '';
 
+    /**
+     * @param string        $host
+     * @param int           $port
+     * @param float         $connection_timeout
+     * @param float         $read_write_timeout
+     * @param resource|null $context
+     * @param bool          $keepalive
+     * @param int           $heartbeat
+     */
     public function __construct(
         $host,
         $port,
@@ -43,7 +62,8 @@ class SwooleIO extends AbstractIO
         $keepalive = false,
         $heartbeat = 0
     ) {
-        if ($heartbeat !== 0 && ($read_write_timeout < ($heartbeat * 2))) {
+        if (0 !== $heartbeat && ($read_write_timeout < ($heartbeat * 2)))
+        {
             throw new \InvalidArgumentException('read_write_timeout must be at least 2x the heartbeat');
         }
         $this->host = $host;
@@ -58,29 +78,26 @@ class SwooleIO extends AbstractIO
 
     /**
      * Set ups the connection.
+     *
      * @return void
+     *
      * @throws \PhpAmqpLib\Exception\AMQPIOException
      * @throws \PhpAmqpLib\Exception\AMQPRuntimeException
      */
     public function connect()
     {
-        $sock = new \Swoole\Coroutine\Client(SWOOLE_SOCK_TCP);
+        $sock = new \Swoole\Coroutine\Client(\SWOOLE_SOCK_TCP);
         if (!$sock->connect($this->host, $this->port, $this->connection_timeout))
         {
-            throw new AMQPRuntimeException(
-                sprintf(
-                    'Error Connecting to server(%s): %s ',
-                    $sock->errCode,
-                    swoole_strerror($sock->errCode)
-                ),
-                $sock->errCode
-            );
+            throw new AMQPRuntimeException(sprintf('Error Connecting to server(%s): %s ', $sock->errCode, swoole_strerror($sock->errCode)), $sock->errCode);
         }
         $this->sock = $sock;
     }
 
     /**
-     * Reconnects the socket
+     * Reconnects the socket.
+     *
+     * @return void
      */
     public function reconnect()
     {
@@ -90,7 +107,9 @@ class SwooleIO extends AbstractIO
 
     /**
      * @param int $len
-     * @return string
+     *
+     * @return string|false
+     *
      * @throws \PhpAmqpLib\Exception\AMQPIOException
      * @throws \PhpAmqpLib\Exception\AMQPRuntimeException
      * @throws \PhpAmqpLib\Exception\AMQPSocketException
@@ -103,7 +122,7 @@ class SwooleIO extends AbstractIO
 
         do
         {
-            if ($len <= strlen($this->buffer))
+            if ($len <= \strlen($this->buffer))
             {
                 $data = substr($this->buffer, 0, $len);
                 $this->buffer = substr($this->buffer, $len);
@@ -117,10 +136,10 @@ class SwooleIO extends AbstractIO
                 throw new AMQPConnectionClosedException('Broken pipe or closed connection');
             }
 
-            $read_buffer = $this->sock->recv($this->read_write_timeout ? $this->read_write_timeout : -1);
-            if ($read_buffer === false)
+            $read_buffer = $this->sock->recv($this->read_write_timeout ?: -1);
+            if (false === $read_buffer)
             {
-                if(110 === $this->sock->errCode)
+                if (110 === $this->sock->errCode)
                 {
                     throw new AMQPTimeoutException('Error receiving data, errno=' . $this->sock->errCode);
                 }
@@ -130,21 +149,23 @@ class SwooleIO extends AbstractIO
                 }
             }
 
-            if ($read_buffer === '')
+            if ('' === $read_buffer)
             {
                 throw new AMQPConnectionClosedException('Broken pipe or closed connection');
             }
 
             $this->buffer .= $read_buffer;
-
         } while (true);
 
-
+        // @phpstan-ignore-next-line
         return false;
     }
 
     /**
      * @param string $data
+     *
+     * @return void
+     *
      * @throws \PhpAmqpLib\Exception\AMQPIOException
      * @throws \PhpAmqpLib\Exception\AMQPSocketException
      * @throws \PhpAmqpLib\Exception\AMQPConnectionClosedException
@@ -154,12 +175,12 @@ class SwooleIO extends AbstractIO
     {
         $buffer = $this->sock->send($data);
 
-        if ($buffer === false)
+        if (false === $buffer)
         {
             throw new AMQPRuntimeException('Error sending data');
         }
 
-        if ($buffer === 0 && !$this->sock->connected)
+        if (0 === $buffer && !$this->sock->connected)
         {
             throw new AMQPConnectionClosedException('Broken pipe or closed connection');
         }
@@ -172,12 +193,14 @@ class SwooleIO extends AbstractIO
      */
     public function close()
     {
-        if($this->sock)
+        if ($this->sock)
         {
             $this->sock->close();
             $this->sock = null;
         }
+        // @phpstan-ignore-next-line
         $this->last_read = null;
+        // @phpstan-ignore-next-line
         $this->last_write = null;
     }
 
@@ -186,12 +209,14 @@ class SwooleIO extends AbstractIO
      */
     public function getSocket()
     {
+        // @phpstan-ignore-next-line
         return $this->sock;
     }
 
     /**
      * @param int $sec
      * @param int $usec
+     *
      * @return int|mixed
      */
     protected function do_select($sec, $usec)

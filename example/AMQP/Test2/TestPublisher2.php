@@ -1,13 +1,12 @@
 <?php
+
 namespace ImiApp\AMQP\Test2;
 
-use Imi\Bean\Annotation\Bean;
-use Imi\AMQP\Annotation\Queue;
-use Imi\AMQP\Base\BasePublisher;
-use Imi\AMQP\Annotation\Consumer;
 use Imi\AMQP\Annotation\Exchange;
 use Imi\AMQP\Annotation\Publisher;
-use Imi\AMQP\Annotation\Connection;
+use Imi\AMQP\Annotation\Queue;
+use Imi\AMQP\Base\BasePublisher;
+use Imi\Bean\Annotation\Bean;
 
 /**
  * @Bean("TestPublisher2")
@@ -17,5 +16,4 @@ use Imi\AMQP\Annotation\Connection;
  */
 class TestPublisher2 extends BasePublisher
 {
-
 }
