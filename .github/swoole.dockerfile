@@ -1,5 +1,7 @@
 ARG SWOOLE_DOCKER_VERSION
-FROM phpswoole/swoole:${SWOOLE_DOCKER_VERSION}-dev
+FROM phpswoole/swoole:${SWOOLE_DOCKER_VERSION}
+
+RUN apt update && apt install -y unzip git
 
 RUN docker-php-ext-install bcmath mysqli pdo_mysql > /dev/null
 
