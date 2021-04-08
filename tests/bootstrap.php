@@ -100,10 +100,6 @@ startServer();
 }, 1);
 App::run('ImiApp');
 
-// @phpstan-ignore-next-line
-if (version_compare(\SWOOLE_VERSION, '4.4', '>='))
-{
-    Coroutine::defer(function () {
-        Event::trigger('IMI.MAIN_SERVER.WORKER.EXIT', [], null, WorkerExitEventParam::class);
-    });
-}
+Coroutine::defer(function () {
+    Event::trigger('IMI.MAIN_SERVER.WORKER.EXIT', [], null, WorkerExitEventParam::class);
+});
