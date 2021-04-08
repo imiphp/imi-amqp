@@ -131,7 +131,7 @@ class SwooleIO extends AbstractIO
                 return $data;
             }
 
-            if (!$this->sock->connected)
+            if (!$this->sock || !$this->sock->connected)
             {
                 throw new AMQPConnectionClosedException('Broken pipe or closed connection');
             }

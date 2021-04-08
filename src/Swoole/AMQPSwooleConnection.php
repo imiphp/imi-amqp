@@ -2,6 +2,7 @@
 
 namespace Imi\AMQP\Swoole;
 
+use Imi\Util\Coroutine;
 use PhpAmqpLib\Connection\AbstractConnection;
 
 /**
@@ -58,5 +59,18 @@ class AMQPSwooleConnection extends AbstractConnection
             $connection_timeout,
             $channel_rpc_timeout
         );
+    }
+
+    public function __destruct()
+    {
+        if (Coroutine::isIn())
+        {
+            parent::__destruct();
+        }
+        // @phpstan-ignore-next-line
+        if ($this->io)
+        {
+            $this->io->close();
+        }
     }
 }
