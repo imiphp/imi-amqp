@@ -23,9 +23,6 @@ jobs:
             4.4-php7.2,
             4.4-php7.3,
             4.4-php7.4,
-            4.3.6-php7.1,
-            4.3.6-php7.2,
-            4.3.6-php7.3,
           ]
     env:
       SWOOLE_DOCKER_VERSION: ${{ matrix.swoole }}
