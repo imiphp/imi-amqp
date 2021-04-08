@@ -7,7 +7,6 @@ use Imi\AMQP\Contract\IConsumer;
 use Imi\AMQP\Contract\IMessage;
 use Imi\AMQP\Enum\ConsumerResult;
 use Imi\App;
-use Imi\Log\Log;
 use function Yurun\Swoole\Coroutine\goWait;
 
 /**
@@ -29,20 +28,13 @@ abstract class BaseConsumer implements IConsumer
      */
     public function run()
     {
-        try
+        $this->connection = $this->getConnection();
+        $this->channel = $this->connection->channel();
+        $this->declareConsumer();
+        $this->bindConsumer();
+        while ($this->channel && $this->channel->is_consuming())
         {
-            $this->connection = $this->getConnection();
-            $this->channel = $this->connection->channel();
-            $this->declareConsumer();
-            $this->bindConsumer();
-            while ($this->channel && $this->channel->is_consuming())
-            {
-                $this->channel->wait();
-            }
-        }
-        catch (\PhpAmqpLib\Exception\AMQPProtocolChannelException $e)
-        {
-            Log::warning('AMQPProtocolChannelException: ' . $e->getMessage());
+            $this->channel->wait();
         }
     }
 

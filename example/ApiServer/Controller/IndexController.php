@@ -74,8 +74,9 @@ class IndexController extends HttpController
      */
     public function consume($memberId)
     {
-        $r1 = Redis::get('imi-amqp:consume:1:' . $memberId);
-        $r2 = Redis::get('imi-amqp:consume:2:' . $memberId);
+        $r1 = Redis::get($key1 = 'imi-amqp:consume:1:' . $memberId);
+        $r2 = Redis::get($key2 = 'imi-amqp:consume:2:' . $memberId);
+        Redis::del($key1, $key2);
 
         return [
             'r1'    => $r1,
