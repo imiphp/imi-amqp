@@ -445,7 +445,7 @@ class TestConsumer extends BaseConsumer
                         // AMQP 连接池名称
                         'poolName'      =>  'amqp',
                         // Redis 连接池名称
-                        'redisPoolName;'=>  'redis',
+                        'redisPoolName'=>  'redis',
                         // Redis 键名前缀
                         'redisPrefix'   =>  'test1:',
                         // 可选配置：
@@ -470,6 +470,8 @@ class TestConsumer extends BaseConsumer
 ```
 
 消费者类写法，与`imi-queue`组件用法一致。
+
+具体可以参考：<example/AMQP/QueueTest>、<example/ApiServer/Controller/IndexController.php>
 
 ## 免费技术支持
 

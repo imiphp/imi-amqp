@@ -4,10 +4,13 @@ namespace ImiApp\ApiServer\Controller;
 
 use Imi\Aop\Annotation\Inject;
 use Imi\Controller\HttpController;
+use Imi\Queue\Facade\Queue;
+use Imi\Queue\Model\Message;
 use Imi\Redis\Redis;
 use Imi\Server\Route\Annotation\Action;
 use Imi\Server\Route\Annotation\Controller;
 use Imi\Server\Route\Annotation\Route;
+use ImiApp\AMQP\QueueTest\QueueTestMessage;
 use ImiApp\AMQP\Test\TestMessage;
 use ImiApp\AMQP\Test2\TestMessage2;
 
@@ -59,6 +62,12 @@ class IndexController extends HttpController
         $message2->setContent('memberId:' . $memberId);
         $r2 = $this->testPublisher2->publish($message2);
 
+        $queueTestMessage = new QueueTestMessage();
+        $queueTestMessage->setMemberId($memberId);
+        $message = new Message();
+        $message->setMessage($queueTestMessage->toMessage());
+        Queue::getQueue('QueueTest1')->push($message);
+
         return [
             'r1'    => $r1,
             'r2'    => $r2,
@@ -76,11 +85,16 @@ class IndexController extends HttpController
     {
         $r1 = Redis::get($key1 = 'imi-amqp:consume:1:' . $memberId);
         $r2 = Redis::get($key2 = 'imi-amqp:consume:2:' . $memberId);
-        Redis::del($key1, $key2);
+        $r3 = Redis::get($key3 = 'imi-amqp:consume:QueueTest:' . $memberId);
+        if (false !== $r1 && false !== $r2 && false !== $r3)
+        {
+            Redis::del($key1, $key2, $key3);
+        }
 
         return [
-            'r1'    => $r1,
-            'r2'    => $r2,
+            'r1' => $r1,
+            'r2' => $r2,
+            'r3' => $r3,
         ];
     }
 }

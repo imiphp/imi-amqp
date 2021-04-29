@@ -18,7 +18,6 @@ function checkHttpServerStatus()
         sleep(1);
         $context = stream_context_create(['http' => ['timeout' => 1]]);
         $body = @file_get_contents('http://127.0.0.1:8080/', false, $context);
-        var_dump($body);
         if ('imi' === $body)
         {
             return true;
