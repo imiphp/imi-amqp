@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Imi\AMQP\Queue;
 
 use Imi\AMQP\Annotation\Consumer;
@@ -14,17 +16,13 @@ class QueueConsumer extends BaseConsumer
 {
     /**
      * 结果通道.
-     *
-     * @var \Swoole\Coroutine\Channel
      */
-    private $resultChannel;
+    private Channel $resultChannel;
 
     /**
      * 本地缓存的队列长度.
-     *
-     * @var int
      */
-    protected $queueLength;
+    protected int $queueLength;
 
     public function __construct(int $queueLength, array $exchanges, array $queues, array $consumers, string $poolName = null)
     {
@@ -60,19 +58,15 @@ class QueueConsumer extends BaseConsumer
 
     /**
      * 初始化配置.
-     *
-     * @return void
      */
-    protected function initConfig()
+    protected function initConfig(): void
     {
     }
 
     /**
      * 重新打开
-     *
-     * @return void
      */
-    public function reopen()
+    public function reopen(): void
     {
         if ($this->channel)
         {
@@ -84,10 +78,6 @@ class QueueConsumer extends BaseConsumer
 
     /**
      * 弹出消息.
-     *
-     * @param float $timeout
-     *
-     * @return \Imi\AMQP\Message|null
      */
     public function pop(float $timeout): ?Message
     {
@@ -117,10 +107,8 @@ class QueueConsumer extends BaseConsumer
 
     /**
      * 绑定消费者.
-     *
-     * @return void
      */
-    protected function bindConsumer()
+    protected function bindConsumer(): void
     {
         foreach ($this->consumers as $consumer)
         {
@@ -139,8 +127,6 @@ class QueueConsumer extends BaseConsumer
 
     /**
      * 消费任务
-     *
-     * @param \Imi\AMQP\Contract\IMessage $message
      *
      * @return mixed
      */

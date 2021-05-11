@@ -1,14 +1,11 @@
 <?php
 
-use Imi\App;
-use Imi\Event\Event;
-use Imi\Event\EventParam;
-use Imi\Server\Event\Param\WorkerExitEventParam;
-use Swoole\Coroutine;
-use Swoole\Runtime;
+declare(strict_types=1);
+
 use function Yurun\Swoole\Coroutine\batch;
 
 require dirname(__DIR__, 4) . '/vendor/autoload.php';
+require dirname(__DIR__) . '/vendor/autoload.php';
 
 /**
  * @return bool
@@ -88,19 +85,3 @@ function startServer()
 })();
 
 startServer();
-
-\Imi\Event\Event::on('IMI.INIT_TOOL', function (EventParam $param) {
-    $data = $param->getData();
-    $data['skip'] = true;
-    \Imi\Tool\Tool::init();
-});
-\Imi\Event\Event::on('IMI.INITED', function (EventParam $param) {
-    Runtime::enableCoroutine();
-    App::initWorker();
-    $param->stopPropagation();
-}, 1);
-App::run('AMQPApp');
-
-Coroutine::defer(function () {
-    Event::trigger('IMI.MAIN_SERVER.WORKER.EXIT', [], null, WorkerExitEventParam::class);
-});

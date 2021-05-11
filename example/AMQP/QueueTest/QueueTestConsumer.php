@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AMQPApp\AMQP\QueueTest;
 
 use Imi\AMQP\Queue\QueueAMQPMessage;
@@ -17,12 +19,9 @@ class QueueTestConsumer extends BaseQueueConsumer
     /**
      * 处理消费.
      *
-     * @param QueueAMQPMessage               $message
-     * @param \Imi\Queue\Driver\IQueueDriver $queue
-     *
-     * @return void
+     * @param QueueAMQPMessage $message
      */
-    protected function consume(IMessage $message, IQueueDriver $queue)
+    protected function consume(IMessage $message, IQueueDriver $queue): void
     {
         var_dump(__CLASS__, $message->getMessage(), \get_class($message));
         $queueTestMessage = QueueTestMessage::fromMessage($message->getMessage());

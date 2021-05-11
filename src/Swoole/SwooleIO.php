@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Imi\AMQP\Swoole;
 
 use PhpAmqpLib\Exception\AMQPConnectionClosedException;
@@ -12,7 +14,7 @@ use PhpAmqpLib\Wire\IO\AbstractIO;
  */
 class SwooleIO extends AbstractIO
 {
-    const READ_BUFFER_WAIT_INTERVAL = 100000;
+    public const READ_BUFFER_WAIT_INTERVAL = 100000;
 
     /**
      *  @var float

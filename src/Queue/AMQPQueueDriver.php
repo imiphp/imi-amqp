@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Imi\AMQP\Queue;
 
 use Imi\Bean\Annotation\Bean;
@@ -23,166 +25,138 @@ class AMQPQueueDriver implements IQueueDriver
         __construct as private traitConstruct;
     }
 
-    const ROUTING_NORMAL = 'normal';
+    public const ROUTING_NORMAL = 'normal';
 
-    const ROUTING_DELAY = 'delay';
+    public const ROUTING_DELAY = 'delay';
 
-    const ROUTING_TIMEOUT = 'timeout';
+    public const ROUTING_TIMEOUT = 'timeout';
 
-    const ROUTING_FAIL = 'fail';
+    public const ROUTING_FAIL = 'fail';
 
     /**
      * AMQP 连接池名称.
-     *
-     * @var string
      */
-    protected $poolName;
+    protected ?string $poolName = null;
 
     /**
      * 队列名称.
-     *
-     * @var string
      */
-    protected $name;
+    protected string $name;
 
     /**
      * 支持消息删除功能.
      *
      * 依赖 Redis
-     *
-     * @var bool
      */
-    protected $supportDelete = true;
+    protected bool $supportDelete = true;
 
     /**
      * 支持消费超时队列功能.
      *
      * 依赖 Redis，并且自动增加一个队列
-     *
-     * @var bool
      */
-    protected $supportTimeout = true;
+    protected bool $supportTimeout = true;
 
     /**
      * 支持消费失败队列功能.
      *
      * 自动增加一个队列
-     *
-     * @var bool
      */
-    protected $supportFail = true;
+    protected bool $supportFail = true;
 
     /**
      * Redis 连接池名称.
-     *
-     * @var string
      */
-    protected $redisPoolName;
+    protected ?string $redisPoolName = null;
 
     /**
      * Redis 键名前缀
-     *
-     * @var string
      */
-    protected $redisPrefix = '';
+    protected string $redisPrefix = '';
 
     /**
      * 循环尝试 pop 的时间间隔，单位：秒.
-     *
-     * @var float
      */
-    protected $timespan = 0.03;
+    protected float $timespan = 0.03;
 
     /**
      * 本地缓存的队列长度.
-     *
-     * @var int
      */
-    protected $queueLength = 16;
+    protected int $queueLength = 16;
 
     /**
      * 消息类名.
-     *
-     * @var string
      */
-    protected $message = JsonAMQPMessage::class;
+    protected string $message = JsonAMQPMessage::class;
 
     /**
      * 发布者.
      *
      * @var \Imi\AMQP\Queue\QueuePublisher|null
      */
-    private $publisher;
+    private ?QueuePublisher $publisher;
 
     /**
      * 延迟发布者.
      *
      * @var \Imi\AMQP\Queue\QueuePublisher|null
      */
-    private $delayPublisher;
+    private ?QueuePublisher $delayPublisher;
 
     /**
      * 消费者.
      *
      * @var \Imi\AMQP\Queue\QueueConsumer|null
      */
-    private $consumer;
+    private ?QueueConsumer $consumer;
 
     /**
      * 超时队列发布者.
      *
      * @var \Imi\AMQP\Queue\QueuePublisher|null
      */
-    private $timeoutPublisher;
+    private ?QueuePublisher $timeoutPublisher;
 
     /**
      * 超时队列消费者.
      *
      * @var \Imi\AMQP\Queue\QueueConsumer|null
      */
-    private $timeoutConsumer;
+    private ?QueueConsumer $timeoutConsumer;
 
     /**
      * 失败队列发布者.
      *
      * @var \Imi\AMQP\Queue\QueuePublisher|null
      */
-    private $failPublisher;
+    private ?QueuePublisher $failPublisher;
 
     /**
      * 失败队列消费者.
      *
      * @var \Imi\AMQP\Queue\QueueConsumer|null
      */
-    private $failConsumer;
+    private ?QueueConsumer $failConsumer;
 
     /**
      * AMQP 的队列名称.
-     *
-     * @var string
      */
-    private $queueName;
+    private string $queueName;
 
     /**
      * AMQP 的延迟队列名称.
-     *
-     * @var string
      */
-    private $delayQueueName;
+    private string $delayQueueName;
 
     /**
      * AMQP 的失败队列名称.
-     *
-     * @var string
      */
-    private $failQueueName;
+    private string $failQueueName;
 
     /**
      * AMQP 的超时队列名称.
-     *
-     * @var string
      */
-    private $timeoutQueueName;
+    private string $timeoutQueueName;
 
     public function __construct(string $name, array $config = [])
     {
@@ -323,8 +297,6 @@ class AMQPQueueDriver implements IQueueDriver
 
     /**
      * 获取队列名称.
-     *
-     * @return string
      */
     public function getName(): string
     {
@@ -333,17 +305,11 @@ class AMQPQueueDriver implements IQueueDriver
 
     /**
      * 推送消息到队列，返回消息ID.
-     *
-     * @param \Imi\Queue\Contract\IMessage $message
-     * @param float                        $delay
-     * @param array                        $options
-     *
-     * @return string
      */
     public function push(IMessage $message, float $delay = 0, array $options = []): string
     {
         $redis = RedisManager::getInstance($this->redisPoolName);
-        $message->setMessageId($messageId = $redis->incr($this->getRedisMessageIdKey()));
+        $message->setMessageId($messageId = (string) $redis->incr($this->getRedisMessageIdKey()));
         $amqpMessage = new \Imi\AMQP\Message();
         $amqpMessage->setBody(json_encode($message->toArray()));
         if ($delay > 0)
@@ -367,8 +333,6 @@ class AMQPQueueDriver implements IQueueDriver
      * 从队列弹出一个消息.
      *
      * @param float $timeout 超时时间，单位：秒。值是-1时立即返回结果
-     *
-     * @return \Imi\Queue\Contract\IMessage|null
      */
     public function pop(float $timeout = -1): ?IMessage
     {
@@ -430,10 +394,6 @@ class AMQPQueueDriver implements IQueueDriver
 
     /**
      * 删除一个消息.
-     *
-     * @param \Imi\Queue\Contract\IMessage $message
-     *
-     * @return bool
      */
     public function delete(IMessage $message): bool
     {
@@ -446,10 +406,8 @@ class AMQPQueueDriver implements IQueueDriver
      * 清空队列.
      *
      * @param int|int[]|null $queueType 清空哪个队列，默认为全部
-     *
-     * @return void
      */
-    public function clear($queueType = null)
+    public function clear($queueType = null): void
     {
         if (null === $queueType)
         {
@@ -493,29 +451,26 @@ class AMQPQueueDriver implements IQueueDriver
      * 将消息标记为成功
      *
      * @param \Imi\AMQP\Queue\QueueAMQPMessage $message
-     *
-     * @return void
      */
-    public function success(IMessage $message)
+    public function success(IMessage $message): int
     {
         $this->consumer->getAMQPChannel()->basic_ack($message->getAmqpMessage()->getAMQPMessage()->getDeliveryTag());
+
+        return 1;
     }
 
     /**
      * 将消息标记为失败.
      *
      * @param \Imi\AMQP\Queue\QueueAMQPMessage $message
-     * @param bool                             $requeue
-     *
-     * @return void
      */
-    public function fail(IMessage $message, bool $requeue = false)
+    public function fail(IMessage $message, bool $requeue = false): int
     {
         if ($requeue)
         {
             $this->consumer->getAMQPChannel()->basic_nack($message->getAmqpMessage()->getAMQPMessage()->getDeliveryTag(), false, $requeue);
 
-            return;
+            return 0;
         }
         if ($this->supportFail)
         {
@@ -528,12 +483,12 @@ class AMQPQueueDriver implements IQueueDriver
         {
             $this->consumer->getAMQPChannel()->basic_nack($message->getAmqpMessage()->getAMQPMessage()->getDeliveryTag());
         }
+
+        return 1;
     }
 
     /**
      * 获取队列状态
-     *
-     * @return \Imi\Queue\Model\QueueStatus
      */
     public function status(): QueueStatus
     {
@@ -624,8 +579,6 @@ class AMQPQueueDriver implements IQueueDriver
      * 将失败消息恢复到队列.
      *
      * 返回恢复数量
-     *
-     * @return int
      */
     public function restoreFailMessages(): int
     {
@@ -648,8 +601,6 @@ class AMQPQueueDriver implements IQueueDriver
      * 将超时消息恢复到队列.
      *
      * 返回恢复数量
-     *
-     * @return int
      */
     public function restoreTimeoutMessages(): int
     {
@@ -670,8 +621,6 @@ class AMQPQueueDriver implements IQueueDriver
 
     /**
      * 获取消息 ID 的键.
-     *
-     * @return string
      */
     public function getRedisMessageIdKey(): string
     {
@@ -682,8 +631,6 @@ class AMQPQueueDriver implements IQueueDriver
      * 获取队列的键.
      *
      * @param int|string $queueType
-     *
-     * @return string
      */
     public function getRedisQueueKey($queueType): string
     {
@@ -694,12 +641,8 @@ class AMQPQueueDriver implements IQueueDriver
      * 将处理超时的消息加入到超时队列.
      *
      * 返回消息数量
-     *
-     * @param int $count
-     *
-     * @return void
      */
-    protected function parseTimeoutMessages(int $count = 100)
+    protected function parseTimeoutMessages(int $count = 100): void
     {
         $redis = RedisManager::getInstance($this->redisPoolName);
         $result = $redis->evalEx(<<<LUA
@@ -742,11 +685,6 @@ LUA
 
     /**
      * 消息是否被删除.
-     *
-     * @param string $messageId
-     * @param bool   $delete
-     *
-     * @return bool
      */
     protected function messageIsDeleted(string $messageId, bool $delete = true): bool
     {

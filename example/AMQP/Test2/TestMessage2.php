@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AMQPApp\AMQP\Test2;
 
 use Imi\AMQP\Message;
@@ -31,10 +33,8 @@ class TestMessage2 extends Message
      * 设置主体数据.
      *
      * @param mixed $data
-     *
-     * @return self
      */
-    public function setBodyData($data)
+    public function setBodyData($data): self
     {
         foreach ($data as $k => $v)
         {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Imi\AMQP\Queue;
 
 use Imi\AMQP\Annotation\Exchange;
@@ -39,10 +41,8 @@ class QueuePublisher extends BasePublisher
 
     /**
      * 初始化配置.
-     *
-     * @return void
      */
-    protected function initConfig()
+    protected function initConfig(): void
     {
     }
 }

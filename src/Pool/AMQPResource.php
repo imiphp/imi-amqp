@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Imi\AMQP\Pool;
 
 use Imi\Pool\BasePoolResource;
-use Imi\Util\Coroutine;
+use Imi\Swoole\Util\Coroutine;
 use PhpAmqpLib\Connection\AbstractConnection;
 
 /**
@@ -13,10 +15,8 @@ class AMQPResource extends BasePoolResource
 {
     /**
      * AMQP 客户端.
-     *
-     * @var \PhpAmqpLib\Connection\AbstractConnection
      */
-    private $connection;
+    private AbstractConnection $connection;
 
     public function __construct(\Imi\Pool\Interfaces\IPool $pool, AbstractConnection $connection)
     {
@@ -26,10 +26,8 @@ class AMQPResource extends BasePoolResource
 
     /**
      * 打开
-     *
-     * @return bool
      */
-    public function open()
+    public function open(): bool
     {
         if (!$this->connection->isConnected())
         {
@@ -41,10 +39,8 @@ class AMQPResource extends BasePoolResource
 
     /**
      * 关闭.
-     *
-     * @return void
      */
-    public function close()
+    public function close(): void
     {
         if (Coroutine::isIn())
         {
@@ -65,10 +61,8 @@ class AMQPResource extends BasePoolResource
 
     /**
      * 重置资源，当资源被使用后重置一些默认的设置.
-     *
-     * @return void
      */
-    public function reset()
+    public function reset(): void
     {
         foreach ($this->connection->channels as $key => $channel)
         {
@@ -90,8 +84,6 @@ class AMQPResource extends BasePoolResource
 
     /**
      * 检查资源是否可用.
-     *
-     * @return bool
      */
     public function checkState(): bool
     {

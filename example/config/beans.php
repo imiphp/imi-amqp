@@ -1,6 +1,6 @@
 <?php
 
-use Imi\Log\LogLevel;
+declare(strict_types=1);
 
 $rootPath = dirname(__DIR__) . '/';
 
@@ -22,40 +22,6 @@ return [
             $rootPath . 'bin',
             $rootPath . 'logs',
         ], // 要排除的路径数组，支持通配符*
-    ],
-    'Logger'    => [
-        'exHandlers'    => [
-            // info 级别日志不输出trace
-            [
-                'class'        => \Imi\Log\Handler\File::class,
-                'options'      => [
-                    'levels'        => [
-                        LogLevel::INFO,
-                        LogLevel::DEBUG,
-                        LogLevel::NOTICE,
-                    ],
-                    'fileName'      => dirname(__DIR__) . '/.runtime/logs/{Y}-{m}-{d}.log',
-                    'format'        => '{Y}-{m}-{d} {H}:{i}:{s} [{level}] {message}',
-                ],
-            ],
-            // 指定级别日志输出trace
-            [
-                'class'        => \Imi\Log\Handler\File::class,
-                'options'      => [
-                    'levels'        => [
-                        LogLevel::ALERT,
-                        LogLevel::CRITICAL,
-                        LogLevel::EMERGENCY,
-                        LogLevel::ERROR,
-                        LogLevel::WARNING,
-                    ],
-                    'fileName'      => dirname(__DIR__) . '/.runtime/logs/{Y}-{m}-{d}.log',
-                    'format'        => "{Y}-{m}-{d} {H}:{i}:{s} [{level}] {message}\n{trace}",
-                    'traceFormat'   => '#{index}  {call} called at [{file}:{line}]',
-                    'traceMinimum'  => true,
-                ],
-            ],
-        ],
     ],
     'AutoRunProcessManager' => [
         'processes' => [
