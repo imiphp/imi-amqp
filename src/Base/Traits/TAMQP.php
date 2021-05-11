@@ -11,13 +11,10 @@ use Imi\AMQP\Annotation\Publisher;
 use Imi\AMQP\Annotation\Queue;
 use Imi\AMQP\Pool\AMQP;
 use Imi\AMQP\Pool\AMQPPool;
-use Imi\AMQP\Swoole\AMQPSwooleConnection;
 use Imi\Aop\Annotation\Inject;
 use Imi\Bean\Annotation\AnnotationManager;
 use Imi\Bean\BeanFactory;
 use Imi\Log\Log;
-use Imi\Swoole\Util\Coroutine;
-use Imi\Util\Imi;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -68,12 +65,12 @@ trait TAMQP
      */
     protected array $consumers = [];
 
+    protected ?Connection $connectionAnnotation = null;
+
     /**
      * 连接池名称.
      */
     protected ?string $poolName = null;
-
-    protected bool $isSwoole = false;
 
     /**
      * 初始化配置.
@@ -81,11 +78,18 @@ trait TAMQP
     protected function initConfig(): void
     {
         $class = BeanFactory::getObjectClass($this);
-        $this->queues = AnnotationManager::getClassAnnotations($class, Queue::class);
-        $this->exchanges = AnnotationManager::getClassAnnotations($class, Exchange::class);
-        $this->publishers = AnnotationManager::getClassAnnotations($class, Publisher::class);
-        $this->consumers = AnnotationManager::getClassAnnotations($class, Consumer::class);
-        $this->isSwoole = Imi::checkAppType('swoole');
+        $annotations = AnnotationManager::getClassAnnotations($class, [
+            Queue::class,
+            Exchange::class,
+            Publisher::class,
+            Consumer::class,
+            Connection::class,
+        ]);
+        $this->queues = $annotations[Queue::class];
+        $this->exchanges = $annotations[Exchange::class];
+        $this->publishers = $annotations[Publisher::class];
+        $this->consumers = $annotations[Consumer::class];
+        $this->connectionAnnotation = $annotations[Connection::class][0] ?? null;
     }
 
     /**
@@ -96,14 +100,13 @@ trait TAMQP
         $poolName = null;
         if (null === $this->poolName)
         {
-            $class = BeanFactory::getObjectClass($this);
-            $connectionConfig = AnnotationManager::getClassAnnotations($class, Connection::class)[0] ?? null;
             $connectionByPool = false;
-            if ($connectionConfig)
+            $connectionAnnotation = $this->connectionAnnotation;
+            if ($connectionAnnotation)
             {
-                if (null === $connectionConfig->poolName)
+                if (null === $connectionAnnotation->poolName)
                 {
-                    if (!(null !== $connectionConfig->host && null !== $connectionConfig->port && null !== $connectionConfig->user && null !== $connectionConfig->password))
+                    if (!(null !== $connectionAnnotation->host && null !== $connectionAnnotation->port && null !== $connectionAnnotation->user && null !== $connectionAnnotation->password))
                     {
                         $connectionByPool = true;
                     }
@@ -119,7 +122,7 @@ trait TAMQP
             }
             if ($connectionByPool)
             {
-                $poolName = $connectionConfig->poolName ?? $this->amqp->getDefaultPoolName();
+                $poolName = $connectionAnnotation->poolName ?? $this->amqp->getDefaultPoolName();
             }
         }
         else
@@ -131,31 +134,22 @@ trait TAMQP
         {
             return AMQPPool::getInstance($poolName);
         }
-        elseif (isset($connectionConfig))
+        elseif (isset($connectionAnnotation))
         {
-            if ($this->isSwoole && Coroutine::isIn())
-            {
-                $className = AMQPSwooleConnection::class;
-            }
-            else
-            {
-                $className = AMQPStreamConnection::class;
-            }
-
-            return new $className(
-                $connectionConfig->host,
-                $connectionConfig->port,
-                $connectionConfig->user,
-                $connectionConfig->password,
-                $connectionConfig->vhost,
-                $connectionConfig->insist,
-                $connectionConfig->loginMethod, $connectionConfig->loginResponse,
-                $connectionConfig->locale, $connectionConfig->connectionTimeout,
-                $connectionConfig->readWriteTimeout,
-                $connectionConfig->context,
-                $connectionConfig->keepalive,
-                $connectionConfig->heartbeat,
-                $connectionConfig->channelRpcTimeout
+            return new AMQPStreamConnection(
+                $connectionAnnotation->host,
+                $connectionAnnotation->port,
+                $connectionAnnotation->user,
+                $connectionAnnotation->password,
+                $connectionAnnotation->vhost,
+                $connectionAnnotation->insist,
+                $connectionAnnotation->loginMethod, $connectionAnnotation->loginResponse,
+                $connectionAnnotation->locale, $connectionAnnotation->connectionTimeout,
+                $connectionAnnotation->readWriteTimeout,
+                $connectionAnnotation->context,
+                $connectionAnnotation->keepalive,
+                $connectionAnnotation->heartbeat,
+                $connectionAnnotation->channelRpcTimeout
             );
         }
         else

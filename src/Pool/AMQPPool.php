@@ -16,14 +16,12 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
  */
 class AMQPPool
 {
+    use \Imi\Util\Traits\TStaticClass;
+
     /**
      * 连接配置.
      */
     private static ?array $connections = null;
-
-    private function __construct()
-    {
-    }
 
     /**
      * 获取新的连接实例.
@@ -44,7 +42,7 @@ class AMQPPool
             }
 
             /** @var AbstractConnection $connection */
-            $connection = App::getBean($config['connectionClass'] ?? AMQPStreamConnection::class, $config['host'], $config['port'], $config['user'], $config['password'], $config['vhost'] ?? '/', $config['insist'] ?? false, $config['loginMethod'] ?? 'AMQPLAIN', $config['loginResponse'] ?? null, $config['locale'] ?? 'en_US', $config['connectionTimeout'] ?? 3.0, $config['readWriteTimeout'] ?? 3.0, $config['context'] ?? null, $config['keepalive'] ?? false, $config['heartbeat'] ?? 0, $config['channelRpcTimeout'] ?? 0.0, $config['sslProtocol'] ?? null);
+            $connection = App::newInstance($config['connectionClass'] ?? AMQPStreamConnection::class, $config['host'], (int) $config['port'], $config['user'], $config['password'], $config['vhost'] ?? '/', (bool) ($config['insist'] ?? false), $config['loginMethod'] ?? 'AMQPLAIN', $config['loginResponse'] ?? null, $config['locale'] ?? 'en_US', (float) ($config['connectionTimeout'] ?? 3.0), (float) ($config['readWriteTimeout'] ?? 3.0), $config['context'] ?? null, (bool) ($config['keepalive'] ?? false), (int) ($config['heartbeat'] ?? 0), (float) ($config['channelRpcTimeout'] ?? 0.0), $config['sslProtocol'] ?? null);
             if (!$connection->isConnected())
             {
                 throw new \RuntimeException(sprintf('AMQP %s connection failed', $poolName));
@@ -86,7 +84,7 @@ class AMQPPool
             if (null === $connection || !$connection->isConnected())
             {
                 /** @var AbstractConnection $connection */
-                $connection = App::getBean($config['connectionClass'] ?? AMQPStreamConnection::class, $config['host'], $config['port'], $config['user'], $config['password'], $config['vhost'] ?? '/', $config['insist'] ?? false, $config['loginMethod'] ?? 'AMQPLAIN', $config['loginResponse'] ?? null, $config['locale'] ?? 'en_US', $config['connectionTimeout'] ?? 3.0, $config['readWriteTimeout'] ?? 3.0, $config['context'] ?? null, $config['keepalive'] ?? false, $config['heartbeat'] ?? 0, $config['channelRpcTimeout'] ?? 0.0, $config['sslProtocol'] ?? null);
+                $connection = App::newInstance($config['connectionClass'] ?? AMQPStreamConnection::class, $config['host'], (int) $config['port'], $config['user'], $config['password'], $config['vhost'] ?? '/', (bool) ($config['insist'] ?? false), $config['loginMethod'] ?? 'AMQPLAIN', $config['loginResponse'] ?? null, $config['locale'] ?? 'en_US', (float) ($config['connectionTimeout'] ?? 3.0), (float) ($config['readWriteTimeout'] ?? 3.0), $config['context'] ?? null, (bool) ($config['keepalive'] ?? false), (int) ($config['heartbeat'] ?? 0), (float) ($config['channelRpcTimeout'] ?? 0.0), $config['sslProtocol'] ?? null);
                 if (!$connection->isConnected())
                 {
                     throw new \RuntimeException(sprintf('AMQP %s connection failed', $poolName));

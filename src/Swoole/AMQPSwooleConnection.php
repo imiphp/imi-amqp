@@ -14,10 +14,7 @@ use PhpAmqpLib\Wire\AMQPWriter;
  */
 class AMQPSwooleConnection extends AbstractConnection
 {
-    /**
-     * @var int|null
-     */
-    protected $heartbeatTimerId = null;
+    protected ?int $heartbeatTimerId = null;
 
     /**
      * @param string   $host
@@ -29,7 +26,7 @@ class AMQPSwooleConnection extends AbstractConnection
      * @param string   $login_method
      * @param null     $login_response      @deprecated
      * @param string   $locale
-     * @param int      $connection_timeout
+     * @param float    $connection_timeout
      * @param float    $read_write_timeout
      * @param resource $context
      * @param bool     $keepalive
@@ -40,6 +37,7 @@ class AMQPSwooleConnection extends AbstractConnection
         $host,
         $port,
         $user,
+        #[\SensitiveParameter]
         $password,
         $vhost = '/',
         $insist = false,

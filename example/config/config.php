@@ -2,22 +2,23 @@
 
 declare(strict_types=1);
 
-use function Imi\env;
 use Imi\Util\Imi;
+
+use function Imi\env;
 
 \defined('AMQP_SERVER_HOST') || \define('AMQP_SERVER_HOST', env('AMQP_SERVER_HOST', '127.0.0.1'));
 
 return [
     // 项目根命名空间
-    'namespace'    => 'AMQPApp',
+    'namespace'                  => 'AMQPApp',
 
     // 配置文件
-    'configs'    => [
+    'configs'                    => [
         'beans'        => __DIR__ . '/beans.php',
     ],
 
     // 扫描目录
-    'beanScan'    => [
+    'beanScan'                   => [
         'AMQPApp\Listener',
         'AMQPApp\Task',
         'AMQPApp\Consumer',
@@ -26,7 +27,7 @@ return [
     ],
 
     // 组件命名空间
-    'components'    => [
+    'components'                 => [
         'Swoole'    => 'Imi\Swoole',
         'Workerman' => 'Imi\Workerman',
         'AMQP'      => 'Imi\AMQP',
@@ -35,18 +36,19 @@ return [
     'overrideDefaultIgnorePaths' => true,
 
     // 主服务器配置
-    'mainServer'    => [
+    'mainServer'                 => [
         'namespace'    => 'AMQPApp\ApiServer',
         'type'         => \Imi\Swoole\Server\Type::HTTP,
         'host'         => '127.0.0.1',
         'port'         => 8080,
         'configs'      => [
             'worker_num'        => 1,
+            'max_wait_time'     => 30,
         ],
     ],
 
     // Workerman 服务器配置
-    'workermanServer' => [
+    'workermanServer'            => [
         'http' => [
             'namespace'    => 'AMQPApp\ApiServer',
             'type'         => \Imi\Workerman\Server\Type::HTTP,
@@ -57,14 +59,20 @@ return [
         ],
     ],
 
+    'workerman'       => [
+        'worker' => [
+            'stopTimeout' => 30,
+        ],
+    ],
+
     // 子服务器（端口监听）配置
-    'subServers'        => [
+    'subServers'                 => [
     ],
 
     // 连接池配置
-    'pools'    => Imi::checkAppType('swoole') ? [
-        'redis'    => [
-            'pool'    => [
+    'pools'                      => Imi::checkAppType('swoole') ? [
+        'redis'     => [
+            'pool'        => [
                 'class'        => \Imi\Swoole\Redis\Pool\CoroutineRedisPool::class,
                 'config'       => [
                     'maxResources'    => 10,
@@ -78,7 +86,7 @@ return [
             ],
         ],
         'rabbit'    => [
-            'pool'    => [
+            'pool'        => [
                 'class'        => \Imi\AMQP\Pool\AMQPCoroutinePool::class,
                 'config'       => [
                     'maxResources'    => 10,
@@ -86,16 +94,18 @@ return [
                 ],
             ],
             'resource'    => [
-                'host'      => AMQP_SERVER_HOST,
-                'port'      => 5672,
-                'user'      => 'guest',
-                'password'  => 'guest',
+                'host'            => AMQP_SERVER_HOST,
+                'port'            => 5672,
+                'user'            => 'guest',
+                'password'        => 'guest',
+                'keepalive'       => false, // 截止 Swoole 4.8 还有兼容问题，所以必须设为 false，不影响使用
+                'connectionClass' => \PhpAmqpLib\Connection\AMQPStreamConnection::class,
             ],
         ],
     ] : [],
 
     // redis 配置
-    'redis' => [
+    'redis'                      => [
         // 数默认连接池名
         'defaultPool' => 'redis',
         'connections' => [
@@ -106,7 +116,7 @@ return [
             ],
         ],
     ],
-    'amqp' => [
+    'amqp'                       => [
         'connections' => [
             'rabbit'    => [
                 'host'      => AMQP_SERVER_HOST,
@@ -117,7 +127,7 @@ return [
         ],
     ],
     // 日志配置
-    'logger' => [
+    'logger'                     => [
         'channels' => [
             'imi' => [
                 'handlers' => [

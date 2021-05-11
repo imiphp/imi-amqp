@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Imi\AMQP\Pool;
 
-use Imi\App;
+use Imi\Log\Log;
 use Imi\Pool\BasePoolResource;
 use Imi\Swoole\Util\Coroutine;
 use Imi\Util\Imi;
@@ -39,7 +39,7 @@ class AMQPResource extends BasePoolResource
     {
         parent::__construct($pool);
         $this->connection = $connection;
-        $this->closed = !$this->connection->isConnected();
+        $this->closed = !$connection->isConnected();
     }
 
     /**
@@ -66,7 +66,7 @@ class AMQPResource extends BasePoolResource
         $this->closed = true;
         if ($this->resetingChannel)
         {
-            $this->resetingChannel->pop();
+            $this->resetingChannel->pop(30);
         }
         try
         {
@@ -77,7 +77,7 @@ class AMQPResource extends BasePoolResource
         }
         catch (\Exception $e)
         {
-            // Nothing here
+            return;
         }
         if ($this->connection instanceof \Imi\AMQP\Swoole\AMQPSwooleConnection)
         {
@@ -159,9 +159,7 @@ class AMQPResource extends BasePoolResource
         }
         catch (\Throwable $th)
         {
-            /** @var \Imi\Log\ErrorLog $errorLog */
-            $errorLog = App::getBean('ErrorLog');
-            $errorLog->onException($th);
+            Log::error($th);
 
             return false;
         }

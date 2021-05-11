@@ -1,16 +1,15 @@
 {
     "name": "imiphp/imi-amqp",
     "type": "library",
-    "license": "MIT",
+    "license": "MulanPSL-2.0",
     "description": "支持在 imi 框架中使用 支持 AMQP 协议的消息队列，如：RabbitMQ",
     "require": {
-        "php": ">=7.4 <8.2",
-        "imiphp/imi-queue": "~2.0.0",
+        "imiphp/imi-queue": "~3.0.0",
         "php-amqplib/php-amqplib": "^2.12.0|^3.0.0"
     },
     "require-dev": {
         "yurunsoft/ide-helper": "~1.0",
-        "swoole/ide-helper": "^4.7",
+        "swoole/ide-helper": "~4.8",
         "phpunit/phpunit": "~9.6"
     },
     "autoload": {
@@ -27,7 +26,8 @@
         "files": [
             "../../../vendor/autoload.php",
             "../../../dev/try-include-swoole.php",
-            "../workerman/vendor/autoload.php"
+            "../workerman/vendor/autoload.php",
+            "../queue/vendor/autoload.php"
         ]
     },
     "scripts": {

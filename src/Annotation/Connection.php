@@ -10,6 +10,7 @@ use Imi\Bean\Annotation\Base;
  * 连接.
  *
  * @Annotation
+ *
  * @Target({"CLASS"})
  *
  * @property string|null $poolName          连接池名称
@@ -42,8 +43,27 @@ class Connection extends Base
      * @param null $loginResponse
      * @param null $context
      */
-    public function __construct(?array $__data = null, ?string $poolName = null, string $host = '', int $port = 0, string $user = '', string $password = '', string $vhost = '/', bool $insist = false, string $loginMethod = 'AMQPLAIN', $loginResponse = null, string $locale = 'en_US', float $connectionTimeout = 3.0, float $readWriteTimeout = 3.0, $context = null, bool $keepalive = false, int $heartbeat = 0, float $channelRpcTimeout = 0.0, ?string $sslProtocol = null)
-    {
+    public function __construct(
+        ?array $__data = null,
+        ?string $poolName = null,
+        string $host = '',
+        int $port = 0,
+        string $user = '',
+        #[\SensitiveParameter]
+        string $password = '',
+        string $vhost = '/',
+        bool $insist = false,
+        string $loginMethod = 'AMQPLAIN',
+        $loginResponse = null,
+        string $locale = 'en_US',
+        float $connectionTimeout = 3.0,
+        float $readWriteTimeout = 3.0,
+        $context = null,
+        bool $keepalive = false,
+        int $heartbeat = 0,
+        float $channelRpcTimeout = 0.0,
+        ?string $sslProtocol = null
+    ) {
         parent::__construct(...\func_get_args());
     }
 }

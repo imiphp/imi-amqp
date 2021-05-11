@@ -11,21 +11,20 @@ use Imi\AMQP\Base\BaseConsumer;
 use Imi\AMQP\Contract\IMessage;
 use Imi\AMQP\Contract\IQueueConsumer;
 use Imi\AMQP\Message;
-use SplQueue;
 
 class QueueConsumer extends BaseConsumer implements IQueueConsumer
 {
     /**
      * 队列.
      */
-    private SplQueue $queue;
+    private ?\SplQueue $queue = null;
 
     /**
      * 本地缓存的队列长度.
      */
-    protected int $queueLength;
+    protected int $queueLength = 0;
 
-    public function __construct(int $queueLength, array $exchanges, array $queues, array $consumers, string $poolName = null)
+    public function __construct(int $queueLength, array $exchanges, array $queues, array $consumers, ?string $poolName = null)
     {
         parent::__construct();
 
@@ -70,14 +69,14 @@ class QueueConsumer extends BaseConsumer implements IQueueConsumer
     {
         if ($this->channel)
         {
-            $this->stop();
+            $this->close();
         }
         $this->connection = $this->getConnection();
         if ($this->connection->isConnected())
         {
             $this->channel = $this->connection->channel();
         }
-        $this->queue = new SplQueue();
+        $this->queue = new \SplQueue();
     }
 
     /**
