@@ -11,6 +11,8 @@
 
 支持消息发布和消费
 
+> 本仓库仅用于浏览，不接受 issue 和 Pull Requests，请前往：<https://github.com/Yurunsoft/imi>
+
 ## Composer
 
 本项目可以使用composer安装，遵循psr-4自动加载规则，在你的 `composer.json` 中加入下面的内容:
@@ -120,7 +122,7 @@
 
 ```php
 <?php
-namespace ImiApp\AMQP\Test2;
+namespace AMQPApp\AMQP\Test2;
 
 use Imi\AMQP\Message;
 
@@ -247,7 +249,7 @@ ticket | ticket | `null` |
 
 ```php
 <?php
-namespace ImiApp\AMQP\Test;
+namespace AMQPApp\AMQP\Test;
 
 use Imi\Bean\Annotation\Bean;
 use Imi\AMQP\Annotation\Queue;
@@ -280,7 +282,7 @@ class TestPublisher extends BasePublisher
 
 ```php
 <?php
-namespace ImiApp\AMQP\Test;
+namespace AMQPApp\AMQP\Test;
 
 use Imi\Redis\Redis;
 use Imi\Bean\Annotation\Bean;
@@ -297,14 +299,14 @@ use Imi\AMQP\Annotation\Connection;
  * 
  * @Bean("TestConsumer")
  * @Connection(host="127.0.0.1", port=5672, user="guest", password="guest")
- * @Consumer(tag="tag-imi", queue="queue-imi-1", message=\ImiApp\AMQP\Test\TestMessage::class)
+ * @Consumer(tag="tag-imi", queue="queue-imi-1", message=\AMQPApp\AMQP\Test\TestMessage::class)
  */
 class TestConsumer extends BaseConsumer
 {
     /**
      * 消费任务
      *
-     * @param \ImiApp\AMQP\Test\TestMessage $message
+     * @param \AMQPApp\AMQP\Test\TestMessage $message
      * @return mixed
      */
     protected function consume(IMessage $message)
@@ -489,6 +491,6 @@ QQ群：17916227 [![点击加群](https://pub.idqqimg.com/wpa/images/group.png "
 
 ## 捐赠
 
-<img src="https://raw.githubusercontent.com/imiphp/imi-amqp/master/res/pay.png"/>
+<img src="https://cdn.jsdelivr.net/gh/Yurunsoft/IMI@dev/res/pay.png"/>
 
 开源不求盈利，多少都是心意，生活不易，随缘随缘……

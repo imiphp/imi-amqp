@@ -4,7 +4,7 @@ defined('AMQP_SERVER_HOST') || define('AMQP_SERVER_HOST', imiGetEnv('AMQP_SERVER
 
 return [
     // 项目根命名空间
-    'namespace'    => 'ImiApp',
+    'namespace'    => 'AMQPApp',
 
     // 配置文件
     'configs'    => [
@@ -13,11 +13,11 @@ return [
 
     // 扫描目录
     'beanScan'    => [
-        'ImiApp\Listener',
-        'ImiApp\Task',
-        'ImiApp\Consumer',
-        'ImiApp\AMQP',
-        'ImiApp\Process',
+        'AMQPApp\Listener',
+        'AMQPApp\Task',
+        'AMQPApp\Consumer',
+        'AMQPApp\AMQP',
+        'AMQPApp\Process',
     ],
 
     // 组件命名空间
@@ -27,7 +27,7 @@ return [
 
     // 主服务器配置
     'mainServer'    => [
-        'namespace'    => 'ImiApp\ApiServer',
+        'namespace'    => 'AMQPApp\ApiServer',
         'type'         => Imi\Server\Type::HTTP,
         'host'         => '127.0.0.1',
         'port'         => 8080,

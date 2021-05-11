@@ -1,6 +1,6 @@
 <?php
 
-namespace ImiApp\Task;
+namespace AMQPApp\Task;
 
 use Imi\Task\Annotation\Task;
 use Imi\Task\Interfaces\ITaskHandler;
@@ -17,11 +17,11 @@ class TestTask implements ITaskHandler
      * @param TaskParam      $param
      * @param \Swoole\Server $server
      * @param int            $taskID
-     * @param int            $WorkerID
+     * @param int            $workerID
      *
      * @return mixed
      */
-    public function handle(TaskParam $param, \Swoole\Server $server, int $taskID, int $WorkerID)
+    public function handle(TaskParam $param, \Swoole\Server $server, int $taskID, int $workerID)
     {
         $data = $param->getData();
 
