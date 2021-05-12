@@ -1,6 +1,6 @@
 <?php
 
-namespace ImiApp;
+namespace AMQPApp;
 
 use Imi\Main\AppBaseMain;
 

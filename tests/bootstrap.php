@@ -8,6 +8,8 @@ use Swoole\Coroutine;
 use Swoole\Runtime;
 use function Yurun\Swoole\Coroutine\batch;
 
+require dirname(__DIR__, 4) . '/vendor/autoload.php';
+
 /**
  * @return bool
  */
@@ -77,7 +79,7 @@ function startServer()
 
 (function () {
     $redis = new \Redis();
-    if (!$redis->connect(imiGetEnv('REDIS_SERVER_HOST', '127.0.0.1'), 6379))
+    if (!$redis->connect(getenv('REDIS_SERVER_HOST') ?: '127.0.0.1', 6379))
     {
         exit('Redis connect failed');
     }
@@ -97,7 +99,7 @@ startServer();
     App::initWorker();
     $param->stopPropagation();
 }, 1);
-App::run('ImiApp');
+App::run('AMQPApp');
 
 Coroutine::defer(function () {
     Event::trigger('IMI.MAIN_SERVER.WORKER.EXIT', [], null, WorkerExitEventParam::class);

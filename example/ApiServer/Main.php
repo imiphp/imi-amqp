@@ -1,6 +1,6 @@
 <?php
 
-namespace ImiApp\ApiServer;
+namespace AMQPApp\ApiServer;
 
 use Imi\Main\BaseMain;
 
