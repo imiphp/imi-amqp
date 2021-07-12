@@ -1,6 +1,6 @@
 <?php
 
-namespace ImiApp\Process;
+namespace AMQPApp\Process;
 
 use Imi\AMQP\Contract\IConsumer;
 use Imi\Aop\Annotation\Inject;
@@ -16,14 +16,14 @@ class TestProcess extends BaseProcess
     /**
      * @Inject("TestConsumer")
      *
-     * @var \ImiApp\AMQP\Test\TestConsumer
+     * @var \AMQPApp\AMQP\Test\TestConsumer
      */
     protected $testConsumer;
 
     /**
      * @Inject("TestConsumer2")
      *
-     * @var \ImiApp\AMQP\Test2\TestConsumer2
+     * @var \AMQPApp\AMQP\Test2\TestConsumer2
      */
     protected $testConsumer2;
 

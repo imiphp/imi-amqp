@@ -1,6 +1,6 @@
 <?php
 
-namespace ImiApp\AMQP\Test2;
+namespace AMQPApp\AMQP\Test2;
 
 use Imi\AMQP\Annotation\Exchange;
 use Imi\AMQP\Annotation\Publisher;

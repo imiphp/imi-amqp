@@ -5,10 +5,11 @@ return [
     ],
     // bean扫描目录
     'beanScan'    => [
-        'ImiApp\ApiServer\Controller',
+        'AMQPApp\ApiServer\Controller',
     ],
     'beans'    => [
         'HttpDispatcher'    => [
+            // TODO：注入失败
             'middlewares'    => [
                 \Imi\Server\Http\Middleware\RouteMiddleware::class,
             ],

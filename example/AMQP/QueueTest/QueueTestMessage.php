@@ -1,6 +1,6 @@
 <?php
 
-namespace ImiApp\AMQP\QueueTest;
+namespace AMQPApp\AMQP\QueueTest;
 
 use Imi\Util\Traits\TNotRequiredDataToProperty;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace ImiApp\AMQP\Test;
+namespace AMQPApp\AMQP\Test;
 
 use Imi\AMQP\Message;
 
