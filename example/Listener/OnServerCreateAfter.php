@@ -1,6 +1,6 @@
 <?php
 
-namespace ImiApp\Listener;
+namespace AMQPApp\Listener;
 
 use Imi\Bean\Annotation\Listener;
 use Imi\Event\EventParam;

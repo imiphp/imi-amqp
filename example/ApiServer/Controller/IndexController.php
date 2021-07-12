@@ -1,7 +1,10 @@
 <?php
 
-namespace ImiApp\ApiServer\Controller;
+namespace AMQPApp\ApiServer\Controller;
 
+use AMQPApp\AMQP\QueueTest\QueueTestMessage;
+use AMQPApp\AMQP\Test\TestMessage;
+use AMQPApp\AMQP\Test2\TestMessage2;
 use Imi\Aop\Annotation\Inject;
 use Imi\Controller\HttpController;
 use Imi\Queue\Facade\Queue;
@@ -10,9 +13,6 @@ use Imi\Redis\Redis;
 use Imi\Server\Route\Annotation\Action;
 use Imi\Server\Route\Annotation\Controller;
 use Imi\Server\Route\Annotation\Route;
-use ImiApp\AMQP\QueueTest\QueueTestMessage;
-use ImiApp\AMQP\Test\TestMessage;
-use ImiApp\AMQP\Test2\TestMessage2;
 
 /**
  * @Controller("/")
@@ -22,14 +22,14 @@ class IndexController extends HttpController
     /**
      * @Inject("TestPublisher")
      *
-     * @var \ImiApp\AMQP\Test\TestPublisher
+     * @var \AMQPApp\AMQP\Test\TestPublisher
      */
     protected $testPublisher;
 
     /**
      * @Inject("TestPublisher2")
      *
-     * @var \ImiApp\AMQP\Test2\TestPublisher2
+     * @var \AMQPApp\AMQP\Test2\TestPublisher2
      */
     protected $testPublisher2;
 

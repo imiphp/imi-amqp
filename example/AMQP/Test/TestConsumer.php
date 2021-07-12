@@ -1,6 +1,6 @@
 <?php
 
-namespace ImiApp\AMQP\Test;
+namespace AMQPApp\AMQP\Test;
 
 use Imi\AMQP\Annotation\Connection;
 use Imi\AMQP\Annotation\Consumer;
@@ -16,14 +16,14 @@ use Imi\Redis\Redis;
  *
  * @Bean("TestConsumer")
  * @Connection(host=AMQP_SERVER_HOST, port=5672, user="guest", password="guest")
- * @Consumer(tag="tag-imi", queue="queue-imi-1", message=\ImiApp\AMQP\Test\TestMessage::class)
+ * @Consumer(tag="tag-imi", queue="queue-imi-1", message=\AMQPApp\AMQP\Test\TestMessage::class)
  */
 class TestConsumer extends BaseConsumer
 {
     /**
      * 消费任务
      *
-     * @param \ImiApp\AMQP\Test\TestMessage $message
+     * @param \AMQPApp\AMQP\Test\TestMessage $message
      *
      * @return mixed
      */
