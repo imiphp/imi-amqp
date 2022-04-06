@@ -44,7 +44,8 @@ abstract class BaseConsumer implements IConsumer
      */
     public function stop(): void
     {
-        if ($this->channel)
+        // @phpstan-ignore-next-line
+        if ($this->channel && $this->channel->getConnection() && ($connection = $this->channel->getConnection()) && $connection->isConnected())
         {
             $this->channel->close();
             $this->channel = null;
